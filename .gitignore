@@ -4,10 +4,14 @@ _ref_*.js
 _ref_*.css
 _ref_*.html
 _excel_dump.txt
-_test_ocr.js
+_test_*.js
+_ocr*.json
+_ocr*.html
+_charts.png
 
-# 源数据（非代码）
+# 源数据/截图（非代码）
 副本维度评估指标表.xlsx
+游戏截图.png
 
 # 系统文件
 .DS_Store

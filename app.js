@@ -230,12 +230,14 @@
     const recs = recordsOf(p.id);
     const latest = latestOf(recs);
     const range = getDeltaTimes();
-    let dMerit = 0, dPower = 0;
+    let dMerit = 0, dPower = 0, dContribTotal = 0, dContribWeek = 0;
     if (latest && range.start != null && range.end != null) {
       const sv = valueAt(recs, range.start);
       const ev = valueAt(recs, range.end);
       dMerit = (ev ? Number(ev.merit) : 0) - (sv ? Number(sv.merit) : 0);
       dPower = (ev ? Number(ev.power) : 0) - (sv ? Number(sv.power) : 0);
+      dContribTotal = (ev ? Number(ev.contribution_total) : 0) - (sv ? Number(sv.contribution_total) : 0);
+      dContribWeek = (ev ? Number(ev.contribution_week) : 0) - (sv ? Number(sv.contribution_week) : 0);
     }
     return {
       p,
@@ -244,8 +246,10 @@
       count: recs.length,
       latestMerit: latest ? Number(latest.merit) : 0,
       latestPower: latest ? Number(latest.power) : 0,
+      latestContribTotal: latest ? Number(latest.contribution_total) : 0,
+      latestContribWeek: latest ? Number(latest.contribution_week) : 0,
       latestTime: latest ? latest.recorded_at : null,
-      dMerit, dPower
+      dMerit, dPower, dContribTotal, dContribWeek
     };
   }
 
@@ -294,8 +298,12 @@
     const keyMap = {
       latest_merit: "latestMerit",
       latest_power: "latestPower",
+      latest_contrib_total: "latestContribTotal",
+      latest_contrib_week: "latestContribWeek",
       delta_merit: "dMerit",
       delta_power: "dPower",
+      delta_contrib_total: "dContribTotal",
+      delta_contrib_week: "dContribWeek",
       count: "count"
     };
     aggs.sort((a, b) => {
@@ -317,8 +325,12 @@
       '<td>' + safe(a.p.team || "—") + '</td>' +
       '<td class="num">' + fmt(a.latestMerit) + '</td>' +
       '<td class="num">' + fmt(a.latestPower) + '</td>' +
+      '<td class="num">' + fmt(a.latestContribTotal) + '</td>' +
+      '<td class="num">' + fmt(a.latestContribWeek) + '</td>' +
       '<td class="' + deltaClass(a.dMerit) + '">' + signed(a.dMerit) + '</td>' +
       '<td class="' + deltaClass(a.dPower) + '">' + signed(a.dPower) + '</td>' +
+      '<td class="' + deltaClass(a.dContribTotal) + '">' + signed(a.dContribTotal) + '</td>' +
+      '<td class="' + deltaClass(a.dContribWeek) + '">' + signed(a.dContribWeek) + '</td>' +
       '<td class="num">' + a.count + '</td>' +
       '<td>' +
         '<button class="link-button" data-addrec="' + a.p.id + '">录入</button>' +
@@ -326,7 +338,7 @@
         '<button class="link-button danger" data-delp="' + a.p.id + '">删除</button>' +
       '</td>' +
       '</tr>'
-    ).join("") : '<tr><td colspan="9" class="muted" style="text-align:center;padding:16px">还没有玩家，点击右上角「+ 新增玩家」。</td></tr>';
+    ).join("") : '<tr><td colspan="13" class="muted" style="text-align:center;padding:16px">还没有玩家，点击右上角「+ 新增玩家」。</td></tr>';
 
     // 表头排序状态
     document.querySelectorAll("#rosterTable th[data-sort]").forEach((th) => {
@@ -359,7 +371,7 @@
   function renderCompareDetail(pid) {
     const startSel = $("compareStart"), endSel = $("compareEnd");
     const records = pid ? recordsOf(pid) : [];
-    const opt = (r) => '<option value="' + r.id + '">' + fmtTime(r.recorded_at) + ' · 武勋 ' + fmt(r.merit) + ' · 势力 ' + fmt(r.power) + '</option>';
+    const opt = (r) => '<option value="' + r.id + '">' + fmtTime(r.recorded_at) + ' · 武勋 ' + fmt(r.merit) + ' · 势力 ' + fmt(r.power) + ' · 贡献 ' + fmt(r.contribution_total) + '</option>';
     startSel.innerHTML = records.map(opt).join("");
     endSel.innerHTML = records.map(opt).join("");
     $("compareCount").textContent = records.length + " 条快照";
@@ -370,19 +382,23 @@
       '<td>' + fmtTime(r.recorded_at) + '</td>' +
       '<td class="num">' + fmt(r.merit) + '</td>' +
       '<td class="num">' + fmt(r.power) + '</td>' +
+      '<td class="num">' + fmt(r.contribution_total) + '</td>' +
+      '<td class="num">' + fmt(r.contribution_week) + '</td>' +
       '<td>' + (r.source === "ocr" ? "截图识别" : "手动") + '</td>' +
       '<td>' + safe(r.note || "—") + '</td>' +
       '<td><button class="link-button danger" data-delrec="' + r.id + '">删除</button></td>' +
       '</tr>'
-    ).join("") : '<tr><td colspan="6" class="muted" style="text-align:center;padding:16px">该玩家还没有任何记录。</td></tr>';
+    ).join("") : '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">该玩家还没有任何记录。</td></tr>';
 
     updateCompareResult();
   }
 
-  function compareCard(title, time, merit, power, extra) {
+  function compareCard(title, time, merit, power, contribTotal, contribWeek) {
     return '<div class="compare-card"><span>' + title + '</span>' +
       '<strong>武勋 ' + merit + '</strong>' +
       '<strong>势力 ' + power + '</strong>' +
+      '<strong>贡献总量 ' + contribTotal + '</strong>' +
+      '<strong>贡献周量 ' + contribWeek + '</strong>' +
       '<div class="time">' + time + '</div></div>';
   }
 
@@ -395,12 +411,16 @@
     if (s && e) {
       const dM = Number(e.merit) - Number(s.merit);
       const dP = Number(e.power) - Number(s.power);
+      const dCT = Number(e.contribution_total) - Number(s.contribution_total);
+      const dCW = Number(e.contribution_week) - Number(s.contribution_week);
       $("compareResult").innerHTML =
-        compareCard("起始快照", fmtTime(s.recorded_at), fmt(s.merit), fmt(s.power), "") +
-        compareCard("结束快照", fmtTime(e.recorded_at), fmt(e.merit), fmt(e.power), "") +
+        compareCard("起始快照", fmtTime(s.recorded_at), fmt(s.merit), fmt(s.power), fmt(s.contribution_total), fmt(s.contribution_week)) +
+        compareCard("结束快照", fmtTime(e.recorded_at), fmt(e.merit), fmt(e.power), fmt(e.contribution_total), fmt(e.contribution_week)) +
         '<div class="compare-card"><span>变化值（结束 − 起始）</span>' +
         '<strong class="' + deltaClass(dM) + '">武勋 ' + signed(dM) + '</strong>' +
         '<strong class="' + deltaClass(dP) + '">势力 ' + signed(dP) + '</strong>' +
+        '<strong class="' + deltaClass(dCT) + '">贡献总量 ' + signed(dCT) + '</strong>' +
+        '<strong class="' + deltaClass(dCW) + '">贡献周量 ' + signed(dCW) + '</strong>' +
         '<div class="time">' + fmtTime(s.recorded_at) + ' → ' + fmtTime(e.recorded_at) + '</div></div>';
     } else {
       $("compareResult").innerHTML = '<div class="muted" style="padding:10px">请选择玩家与两次快照。</div>';
@@ -425,7 +445,7 @@
   }
   function exportRosterCsv() {
     const aggs = rosterRows();
-    const rows = [["排名", "游戏昵称", "团组", "职责", "最新武勋", "最新势力值", "最新更新时间", "Δ武勋", "Δ势力值", "记录数"]];
+    const rows = [["排名", "游戏昵称", "团组", "职责", "最新武勋", "最新势力值", "最新贡献总量", "最新贡献周量", "最新更新时间", "Δ武勋", "Δ势力值", "Δ贡献总量", "Δ贡献周量", "记录数"]];
     aggs.forEach((a, i) => rows.push([
       i + 1,
       a.p.game_name,
@@ -433,9 +453,13 @@
       a.p.duty || "",
       a.latestMerit,
       a.latestPower,
+      a.latestContribTotal,
+      a.latestContribWeek,
       fmtTime(a.latestTime),
       a.dMerit,
       a.dPower,
+      a.dContribTotal,
+      a.dContribWeek,
       a.count
     ]));
     downloadCsv("同盟成员数据.csv", rows);
@@ -444,11 +468,13 @@
     const pid = $("comparePlayer").value;
     const recs = pid ? recordsOf(pid) : [];
     const player = S.players.find((p) => p.id === pid);
-    const rows = [["记录时间", "武勋", "势力值", "来源", "备注"]];
+    const rows = [["记录时间", "武勋", "势力值", "贡献总量", "贡献周量", "来源", "备注"]];
     recs.forEach((r) => rows.push([
       fmtTime(r.recorded_at),
       Number(r.merit),
       Number(r.power),
+      Number(r.contribution_total) || 0,
+      Number(r.contribution_week) || 0,
       r.source === "ocr" ? "截图识别" : "手动",
       r.note || ""
     ]));
@@ -482,9 +508,15 @@
     }
 
     const aggs = S.players.map(playerAgg);
-    const metric = $("chartMetric").value === "power" ? "power" : "merit";
-    const metricLabel = metric === "power" ? "势力值" : "武勋";
-    const key = metric === "power" ? "latestPower" : "latestMerit";
+    const metricMap = {
+      merit: { label: "武勋", key: "latestMerit" },
+      power: { label: "势力值", key: "latestPower" },
+      contrib_total: { label: "贡献总量", key: "latestContribTotal" },
+      contrib_week: { label: "贡献周量", key: "latestContribWeek" }
+    };
+    const metric = metricMap[$("chartMetric").value] || metricMap.merit;
+    const metricLabel = metric.label;
+    const key = metric.key;
     const topN = parseInt($("chartTop").value, 10) || 0;
     let list = aggs.slice().sort((a, b) => b[key] - a[key]);
     if (topN > 0) list = list.slice(0, topN);
@@ -524,8 +556,10 @@
       data: {
         labels: recs.map((r) => fmtTime(r.recorded_at)),
         datasets: [
-          { label: "武勋", data: recs.map((r) => Number(r.merit)), borderColor: "#ff6b5e", backgroundColor: "rgba(240,199,94,.15)", tension: 0.3, yAxisID: "y" },
-          { label: "势力值", data: recs.map((r) => Number(r.power)), borderColor: "#ffb24d", backgroundColor: "rgba(255,178,77,.15)", tension: 0.3, yAxisID: "y1" }
+          { label: "武勋", data: recs.map((r) => Number(r.merit)), borderColor: "#ff6b5e", backgroundColor: "rgba(255,107,94,.15)", tension: 0.3, yAxisID: "y" },
+          { label: "势力值", data: recs.map((r) => Number(r.power)), borderColor: "#ffb24d", backgroundColor: "rgba(255,178,77,.15)", tension: 0.3, yAxisID: "y1" },
+          { label: "贡献总量", data: recs.map((r) => Number(r.contribution_total)), borderColor: "#6a8fe8", backgroundColor: "rgba(106,143,232,.15)", tension: 0.3, yAxisID: "y1" },
+          { label: "贡献周量", data: recs.map((r) => Number(r.contribution_week)), borderColor: "#3ecf8e", backgroundColor: "rgba(62,207,142,.15)", tension: 0.3, yAxisID: "y" }
         ]
       },
       options: {
@@ -611,6 +645,8 @@
     let filled = 0;
     if (res.merit != null) { $("recordMerit").value = res.merit; filled++; }
     if (res.power != null) { $("recordPower").value = res.power; filled++; }
+    if (res.contributionTotal != null) { $("recordContribTotal").value = res.contributionTotal; filled++; }
+    if (res.contributionWeek != null) { $("recordContribWeek").value = res.contributionWeek; filled++; }
     $("recordSource").value = "ocr";
     $("ocrStatus").textContent = filled ? ("已提取 " + filled + " 项字段，请核对后保存。") : "未能自动提取字段，请手动填写。";
   }
@@ -621,16 +657,89 @@
     const btn = $("runOcr");
     btn.disabled = true;
     try {
-      const text = await window.OCR.recognizeImage($("preview").src, (m) => {
+      const data = await window.OCR.recognizeImage($("preview").src, (m) => {
         if (m.status === "recognizing text") $("ocrStatus").textContent = "正在识别：" + Math.round(m.progress * 100) + "%";
       });
-      $("ocrText").value = text;
-      applyParsed(text);
+      $("ocrText").value = data.text || "";
+      applyParsed(data.text);
+      renderBatch(data);
+      $("ocrStatus").textContent = "识别完成，请核对结果后保存。";
     } catch (err) {
       $("ocrStatus").textContent = "识别失败：" + err.message + "（可粘贴文字或手动填写）";
     } finally {
       btn.disabled = false;
     }
+  }
+
+  // 批量识别成员列表
+  let batchRows = [];
+  function renderBatchRows() {
+    const panel = $("batchPanel");
+    if (!batchRows.length) { panel.classList.add("hidden"); return; }
+    panel.classList.remove("hidden");
+    $("batchSummary").textContent = batchRows.length + " 行";
+    $("batchBody").innerHTML = batchRows.map((r, i) =>
+      '<tr>' +
+      '<td><input data-batch="name" data-i="' + i + '" value="' + safe(r.name || "") + '" /></td>' +
+      '<td><input data-batch="merit" data-i="' + i + '" type="number" min="0" value="' + (r.merit != null ? r.merit : "") + '" /></td>' +
+      '<td><input data-batch="contributionTotal" data-i="' + i + '" type="number" min="0" value="' + (r.contributionTotal != null ? r.contributionTotal : "") + '" /></td>' +
+      '<td><input data-batch="contributionWeek" data-i="' + i + '" type="number" min="0" value="' + (r.contributionWeek != null ? r.contributionWeek : "") + '" /></td>' +
+      '<td><button class="link-button danger" data-batchremove="' + i + '">移除</button></td>' +
+      '</tr>'
+    ).join("");
+  }
+
+  function renderBatch(data) {
+    const res = window.OCR.parseMemberTable(data);
+    batchRows = (res && res.rows) || [];
+    renderBatchRows();
+  }
+
+  function findPlayerByName(name) {
+    const n = (name || "").trim().toLowerCase();
+    return S.players.find((p) => (p.game_name || "").trim().toLowerCase() === n);
+  }
+
+  async function batchSave() {
+    if (!S.active) return;
+    const inputs = document.querySelectorAll("#batchBody input[data-batch]");
+    const rows = batchRows.map(() => ({ name: "", merit: 0, contributionTotal: 0, contributionWeek: 0 }));
+    inputs.forEach((inp) => {
+      const i = Number(inp.dataset.i);
+      const f = inp.dataset.batch;
+      if (f === "name") rows[i].name = inp.value;
+      else if (f === "merit") rows[i].merit = Number(inp.value) || 0;
+      else if (f === "contributionTotal") rows[i].contributionTotal = Number(inp.value) || 0;
+      else if (f === "contributionWeek") rows[i].contributionWeek = Number(inp.value) || 0;
+    });
+    const valid = rows.filter((r) => (r.name || "").trim());
+    if (!valid.length) { toast("没有可保存的行"); return; }
+    const recorded_at = new Date().toISOString();
+    let saved = 0;
+    try {
+      for (const r of valid) {
+        let player = findPlayerByName(r.name);
+        if (!player) {
+          player = await Store.players.add(S.active.id, { game_name: r.name.trim(), team: "", duty: "" });
+          S.players.push(player);
+        }
+        await Store.records.add(S.active.id, {
+          player_id: player.id,
+          merit: r.merit,
+          power: 0,
+          contribution_total: r.contributionTotal,
+          contribution_week: r.contributionWeek,
+          source: "ocr",
+          note: "成员列表批量导入",
+          recorded_at
+        });
+        saved++;
+      }
+      toast("已批量保存 " + saved + " 条记录");
+      batchRows = [];
+      $("batchPanel").classList.add("hidden");
+      loadAllianceData();
+    } catch (err) { toast("保存失败：" + err.message); }
   }
 
   async function saveRecord(e) {
@@ -644,12 +753,16 @@
         player_id: pid,
         merit: Number($("recordMerit").value) || 0,
         power: Number($("recordPower").value) || 0,
+        contribution_total: Number($("recordContribTotal").value) || 0,
+        contribution_week: Number($("recordContribWeek").value) || 0,
         source: $("recordSource").value,
         note: $("recordNote").value.trim(),
         recorded_at
       });
       $("recordMerit").value = "";
       $("recordPower").value = "";
+      $("recordContribTotal").value = "";
+      $("recordContribWeek").value = "";
       $("recordNote").value = "";
       $("recordSource").value = "manual";
       toast("记录已保存，并已记录时间");
@@ -732,6 +845,7 @@
     $("pasteText").onclick = () => $("ocrTextWrap").classList.toggle("hidden");
     $("parseText").onclick = () => applyParsed($("ocrText").value);
     $("recordForm").addEventListener("submit", saveRecord);
+    $("batchSaveBtn").addEventListener("click", batchSave);
 
     // 成员数据
     $("addPlayerBtn").onclick = () => openPlayerModal(null);
@@ -806,7 +920,7 @@
 
     // 动态点击委托
     document.addEventListener("click", async (e) => {
-      const t = e.target.closest("[data-aid],[data-addrec],[data-editp],[data-delp],[data-delrec],[data-removemember]");
+      const t = e.target.closest("[data-aid],[data-addrec],[data-editp],[data-delp],[data-delrec],[data-removemember],[data-batchremove]");
       if (!t) return;
       if (t.hasAttribute("data-aid")) { openAlliance(t.dataset.aid); return; }
       if (t.hasAttribute("data-addrec")) { S.preselectPlayer = t.dataset.addrec; $("recordSource").value = "manual"; showTab("import"); renderImport(); toast("请填写该玩家的武勋 / 势力值并保存"); return; }
@@ -828,6 +942,11 @@
         if (confirm("移除该成员的账号权限？")) {
           await Store.members.remove(S.active.id, t.dataset.removemember); toast("已移除"); loadAllianceData();
         }
+        return;
+      }
+      if (t.hasAttribute("data-batchremove")) {
+        batchRows.splice(Number(t.dataset.batchremove), 1);
+        renderBatchRows();
         return;
       }
     });

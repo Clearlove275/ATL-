@@ -167,6 +167,8 @@
                 <label>玩家 *<select id="recordPlayer" required></select></label>
                 <label>武勋<input id="recordMerit" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></label>
                 <label>势力值<input id="recordPower" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></label>
+                <label>贡献总量<input id="recordContribTotal" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></label>
+                <label>贡献周量<input id="recordContribWeek" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></label>
                 <label>记录时间 *<input id="recordTime" type="datetime-local" required /></label>
                 <label>来源<select id="recordSource"><option value="manual">手动录入</option><option value="ocr">截图识别</option></select></label>
                 <label class="wide">备注<input id="recordNote" placeholder="例如：开荒期 / 州战前 / 结算前" /></label>
@@ -174,6 +176,17 @@
               </form>
             </section>
           </div>
+          <section id="batchPanel" class="panel hidden" style="margin-top:16px">
+            <div class="panel-title"><h3>识别到成员列表（多行）</h3><span id="batchSummary" class="muted"></span></div>
+            <p class="muted">自动识别可能有误，请逐行核对名字与数值后再保存；未匹配到的名字会作为新玩家加入。</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>玩家名称</th><th>武勋（功勋）</th><th>贡献总量</th><th>贡献周量</th><th></th></tr></thead>
+                <tbody id="batchBody"></tbody>
+              </table>
+            </div>
+            <div class="form-footer" style="margin-top:12px"><span></span><button id="batchSaveBtn" class="primary">批量保存</button></div>
+          </section>
         </section>
 
         <!-- 成员数据 -->
@@ -206,8 +219,12 @@
                     <th data-sort="team">团组</th>
                     <th data-sort="latest_merit">最新武勋</th>
                     <th data-sort="latest_power">最新势力值</th>
+                    <th data-sort="latest_contrib_total">最新贡献总量</th>
+                    <th data-sort="latest_contrib_week">最新贡献周量</th>
                     <th data-sort="delta_merit">Δ武勋</th>
                     <th data-sort="delta_power">Δ势力值</th>
+                    <th data-sort="delta_contrib_total">Δ贡献总量</th>
+                    <th data-sort="delta_contrib_week">Δ贡献周量</th>
                     <th data-sort="count">记录数</th>
                     <th>操作</th>
                   </tr>
@@ -235,7 +252,7 @@
             <div class="panel-title"><h3>该玩家的历史快照</h3><div class="chart-controls"><span id="compareCount" class="muted"></span><button id="exportRecordsCsv" class="ghost small">导出该玩家记录 CSV</button></div></div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>记录时间</th><th>武勋</th><th>势力值</th><th>来源</th><th>备注</th><th></th></tr></thead>
+                <thead><tr><th>记录时间</th><th>武勋</th><th>势力值</th><th>贡献总量</th><th>贡献周量</th><th>来源</th><th>备注</th><th></th></tr></thead>
                 <tbody id="compareRecords"></tbody>
               </table>
             </div>
@@ -247,7 +264,7 @@
           <div class="section-heading"><div><p class="eyebrow">CHARTS</p><h2>数据图表</h2><p>直观查看全盟武勋 / 势力值排行，以及单个玩家随时间的成长趋势。</p></div></div>
           <section class="panel">
             <div class="panel-title"><h3>成员排行</h3><div class="chart-controls">
-              <select id="chartMetric"><option value="merit">武勋</option><option value="power">势力值</option></select>
+              <select id="chartMetric"><option value="merit">武勋</option><option value="power">势力值</option><option value="contrib_total">贡献总量</option><option value="contrib_week">贡献周量</option></select>
               <select id="chartTop"><option value="10">前 10 名</option><option value="20">前 20 名</option><option value="0">全部</option></select>
             </div></div>
             <div class="chart-wrap"><canvas id="rankChart"></canvas></div>

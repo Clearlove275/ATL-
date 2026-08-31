@@ -158,6 +158,8 @@
         const row = {
           id: uid(), alliance_id: aid, player_id: r.player_id,
           merit: Number(r.merit) || 0, power: Number(r.power) || 0,
+          contribution_total: Number(r.contribution_total) || 0,
+          contribution_week: Number(r.contribution_week) || 0,
           source: r.source || "manual", note: r.note || "",
           recorded_at: r.recorded_at || nowIso(), created_by: LOCAL_USER.id, created_at: nowIso()
         };
@@ -317,6 +319,8 @@
         const { data, error } = await sb.from("records").insert({
           alliance_id: aid, player_id: r.player_id,
           merit: Number(r.merit) || 0, power: Number(r.power) || 0,
+          contribution_total: Number(r.contribution_total) || 0,
+          contribution_week: Number(r.contribution_week) || 0,
           source: r.source || "manual", note: r.note || "",
           recorded_at: r.recorded_at || nowIso(), created_by: u
         }).select().single();

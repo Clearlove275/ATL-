@@ -49,6 +49,8 @@ create table if not exists public.records (
   player_id uuid not null references public.players(id) on delete cascade,
   merit bigint not null default 0,
   power bigint not null default 0,
+  contribution_total bigint not null default 0,
+  contribution_week bigint not null default 0,
   source text not null default 'manual' check (source in ('ocr','manual')),
   note text not null default '',
   recorded_at timestamptz not null default now(),
