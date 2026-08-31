@@ -651,11 +651,55 @@
     $("ocrStatus").textContent = filled ? ("已提取 " + filled + " 项字段，请核对后保存。") : "未能自动提取字段，请手动填写。";
   }
 
+  function toNum(v) {
+    if (v == null || v === "") return 0;
+    if (typeof v === "number") return Math.round(v);
+    const n = window.OCR.parseChineseNumber(String(v));
+    if (n != null) return n;
+    return Number(String(v).replace(/[^\d.]/g, "")) || 0;
+  }
+
+  function applyVisionResult(json) {
+    if (!json) return;
+    if (Array.isArray(json)) {
+      batchRows = json.map((r) => ({
+        name: r.name || "",
+        merit: toNum(r.merit),
+        power: toNum(r.power),
+        contributionTotal: toNum(r.contributionTotal),
+        contributionWeek: toNum(r.contributionWeek)
+      })).filter((r) => r.name);
+      renderBatchRows();
+    } else {
+      if (json.merit != null) $("recordMerit").value = toNum(json.merit);
+      if (json.power != null) $("recordPower").value = toNum(json.power);
+      if (json.contributionTotal != null) $("recordContribTotal").value = toNum(json.contributionTotal);
+      if (json.contributionWeek != null) $("recordContribWeek").value = toNum(json.contributionWeek);
+      $("recordSource").value = "ocr";
+    }
+  }
+
   async function runOcr() {
     if (!$("preview").src) return;
-    if (!window.Tesseract) { $("ocrStatus").textContent = "识别组件未加载，请检查网络后刷新。"; return; }
     const btn = $("runOcr");
     btn.disabled = true;
+    const cfg = window.APP_CONFIG || {};
+    // 1) 视觉识别后端优先
+    if (cfg.visionBackendUrl) {
+      try {
+        $("ocrStatus").textContent = "正在视觉识别…";
+        const data = await window.OCR.recognizeViaBackend($("preview").src, cfg.visionBackendUrl, cfg.visionBackendKey || "");
+        $("ocrText").value = data.text || "";
+        applyVisionResult(data.json);
+        $("ocrStatus").textContent = "视觉识别完成，请核对后保存。";
+        btn.disabled = false;
+        return;
+      } catch (err) {
+        $("ocrStatus").textContent = "视觉识别失败，改用本地识别…";
+      }
+    }
+    // 2) 回退本地 Tesseract
+    if (!window.Tesseract) { $("ocrStatus").textContent = "识别组件未加载，请检查网络后刷新。"; btn.disabled = false; return; }
     try {
       const data = await window.OCR.recognizeImage($("preview").src, (m) => {
         if (m.status === "recognizing text") $("ocrStatus").textContent = "正在识别：" + Math.round(m.progress * 100) + "%";

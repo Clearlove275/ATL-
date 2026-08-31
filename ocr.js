@@ -202,8 +202,32 @@
     return { rows };
   }
 
+  // 把图片转成 data URL（用于调用视觉识别后端）
+  async function imageToDataUrl(imageUrl) {
+    const img = await loadImage(imageUrl);
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.getContext("2d").drawImage(img, 0, 0);
+    return canvas.toDataURL("image/png");
+  }
+
+  // 调用视觉识别后端（Supabase Edge Function），返回 { ok, text, json }
+  async function recognizeViaBackend(imageUrl, baseUrl, key) {
+    const dataUrl = await imageToDataUrl(imageUrl);
+    const res = await fetch(baseUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": key || "" },
+      body: JSON.stringify({ image: dataUrl })
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error((data && data.error) || "视觉识别失败");
+    return data;
+  }
+
   window.OCR = {
     recognizeImage,
+    recognizeViaBackend,
     parseAll,
     parseMemberTable,
     parseChineseNumber

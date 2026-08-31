@@ -61,6 +61,23 @@ window.APP_CONFIG = {
 5.（推荐）在 **Authentication → Providers → Email** 中关闭 **Confirm email**，这样注册后无需邮件验证即可直接登录。
 6. 重新打开网站，注册账号即可使用。
 
+## 配置视觉识别后端（可选，识别更准）
+
+默认用浏览器本地 Tesseract 识别。若要更高识别率（尤其是成员列表的玩家名字、贡献周量），可配置视觉模型后端：
+
+1. 在 Supabase 项目中部署 Edge Function `supabase/functions/vision-ocr`：
+   Dashboard → Edge Functions → 新建 `vision-ocr`，把 `index.ts` 内容粘贴进去。
+2. 在该 Function 的 **Secrets** 中设置：
+   - `VISION_API_KEY`：视觉模型密钥
+   - `VISION_BASE_URL`：以 `/compatible-mode/v1` 结尾的兼容端点
+   - `VISION_MODEL`：模型名
+   - `VISION_FUNC_KEY`（可选）：自定义访问密钥，用于简单校验
+3. 在 `config.js` 中填入：
+   ```js
+   visionBackendUrl: "https://你的项目.supabase.co/functions/v1/vision-ocr",
+   visionBackendKey: "你设置的 VISION_FUNC_KEY（没设就留空）"
+   ```
+4. 导入截图时会优先走视觉模型识别，失败自动回退到本地识别。
 ## 使用说明
 
 ### 盟主 / 管理者
