@@ -213,11 +213,14 @@
   }
 
   // 调用视觉识别后端（Supabase Edge Function），返回 { ok, text, json }
-  async function recognizeViaBackend(imageUrl, baseUrl, key) {
+  // anonKey 为 Supabase 匿名公钥，用于通过 Supabase 网关鉴权
+  async function recognizeViaBackend(imageUrl, baseUrl, key, anonKey) {
     const dataUrl = await imageToDataUrl(imageUrl);
+    const headers = { "Content-Type": "application/json", "apikey": key || "" };
+    if (anonKey) headers["Authorization"] = "Bearer " + anonKey;
     const res = await fetch(baseUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "apikey": key || "" },
+      headers,
       body: JSON.stringify({ image: dataUrl })
     });
     const data = await res.json();
