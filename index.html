@@ -103,6 +103,7 @@
           <button data-view="import">导入数据</button>
           <button data-view="roster">成员数据</button>
           <button data-view="compare">变化值对比</button>
+          <button data-view="charts">数据图表</button>
           <button data-view="settings">同盟设置</button>
         </nav>
 
@@ -175,6 +176,7 @@
                 <option value="custom">自定义时间</option>
               </select>
               <input id="playerSearch" placeholder="搜索昵称 / 团组" />
+              <button id="exportCsvBtn" class="ghost small">导出 CSV</button>
             </div>
             <div class="table-wrap">
               <table id="rosterTable">
@@ -211,13 +213,29 @@
             <div id="compareResult" class="compare-result"></div>
           </section>
           <section class="panel table-panel">
-            <div class="panel-title"><h3>该玩家的历史快照</h3><span id="compareCount" class="muted"></span></div>
+            <div class="panel-title"><h3>该玩家的历史快照</h3><div class="chart-controls"><span id="compareCount" class="muted"></span><button id="exportRecordsCsv" class="ghost small">导出该玩家记录 CSV</button></div></div>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>记录时间</th><th>武勋</th><th>势力值</th><th>来源</th><th>备注</th><th></th></tr></thead>
                 <tbody id="compareRecords"></tbody>
               </table>
             </div>
+          </section>
+        </section>
+
+        <!-- 数据图表 -->
+        <section id="chartsView" class="tab-view">
+          <div class="section-heading"><div><p class="eyebrow">CHARTS</p><h2>数据图表</h2><p>直观查看全盟武勋 / 势力值排行，以及单个玩家随时间的成长趋势。</p></div></div>
+          <section class="panel">
+            <div class="panel-title"><h3>成员排行</h3><div class="chart-controls">
+              <select id="chartMetric"><option value="merit">武勋</option><option value="power">势力值</option></select>
+              <select id="chartTop"><option value="10">前 10 名</option><option value="20">前 20 名</option><option value="0">全部</option></select>
+            </div></div>
+            <div class="chart-wrap"><canvas id="rankChart"></canvas></div>
+          </section>
+          <section class="panel">
+            <div class="panel-title"><h3>玩家成长趋势</h3><select id="chartPlayer"></select></div>
+            <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
           </section>
         </section>
 
@@ -251,6 +269,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="config.js"></script>
   <script src="ocr.js"></script>
   <script src="store.js"></script>

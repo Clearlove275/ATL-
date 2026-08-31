@@ -23,6 +23,8 @@
     unsub: null
   };
 
+  const chartInstances = {};
+
   /* ---------- 工具 ---------- */
   function toast(msg) {
     const el = $("toast");
@@ -188,6 +190,7 @@
     else if (name === "import") renderImport();
     else if (name === "roster") renderRoster();
     else if (name === "compare") renderCompare();
+    else if (name === "charts") renderCharts();
     else if (name === "settings") renderSettings();
   }
   /* ---------- 记录与变化值计算 ---------- */
@@ -283,11 +286,10 @@
   }
 
   /* ---------- 成员数据（排序 + 变化值） ---------- */
-  function renderRoster() {
+  function rosterRows() {
     const q = ($("playerSearch").value || "").trim().toLowerCase();
     let aggs = S.players.map(playerAgg);
     if (q) aggs = aggs.filter((a) => (a.p.game_name + " " + a.p.team + " " + a.p.duty).toLowerCase().includes(q));
-
     const key = S.sortKey, dir = S.sortDir === "asc" ? 1 : -1;
     const keyMap = {
       latest_merit: "latestMerit",
@@ -303,7 +305,11 @@
       const va = a[prop], vb = b[prop];
       return (Number(va) - Number(vb)) * dir;
     });
+    return aggs;
+  }
 
+  function renderRoster() {
+    const aggs = rosterRows();
     $("rosterBody").innerHTML = aggs.length ? aggs.map((a, i) =>
       '<tr>' +
       '<td>' + (i + 1) + '</td>' +
@@ -401,6 +407,139 @@
     }
   }
 
+  /* ---------- CSV 导出 ---------- */
+  function csvEscape(v) {
+    const s = String(v == null ? "" : v);
+    if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+  function downloadCsv(filename, rows) {
+    const csv = "\uFEFF" + rows.map((r) => r.map(csvEscape).join(",")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 200);
+    toast("CSV 已导出");
+  }
+  function exportRosterCsv() {
+    const aggs = rosterRows();
+    const rows = [["排名", "游戏昵称", "团组", "职责", "最新武勋", "最新势力值", "最新更新时间", "Δ武勋", "Δ势力值", "记录数"]];
+    aggs.forEach((a, i) => rows.push([
+      i + 1,
+      a.p.game_name,
+      a.p.team || "",
+      a.p.duty || "",
+      a.latestMerit,
+      a.latestPower,
+      fmtTime(a.latestTime),
+      a.dMerit,
+      a.dPower,
+      a.count
+    ]));
+    downloadCsv("同盟成员数据.csv", rows);
+  }
+  function exportRecordsCsv() {
+    const pid = $("comparePlayer").value;
+    const recs = pid ? recordsOf(pid) : [];
+    const player = S.players.find((p) => p.id === pid);
+    const rows = [["记录时间", "武勋", "势力值", "来源", "备注"]];
+    recs.forEach((r) => rows.push([
+      fmtTime(r.recorded_at),
+      Number(r.merit),
+      Number(r.power),
+      r.source === "ocr" ? "截图识别" : "手动",
+      r.note || ""
+    ]));
+    downloadCsv(((player && player.game_name) || "玩家") + "-记录.csv", rows);
+  }
+
+  /* ---------- 数据图表 ---------- */
+  function destroyChart(name) {
+    if (chartInstances[name]) { chartInstances[name].destroy(); chartInstances[name] = null; }
+  }
+  function chartFallback(wrap) {
+    const canvas = wrap.querySelector("canvas");
+    if (canvas) canvas.style.display = "none";
+    if (!wrap.querySelector(".chart-fallback")) {
+      const d = document.createElement("div");
+      d.className = "chart-fallback muted";
+      d.textContent = "图表组件未加载，请检查网络后刷新。";
+      wrap.appendChild(d);
+    }
+  }
+  function renderCharts() {
+    const psel = $("chartPlayer");
+    const prevPid = psel.value;
+    psel.innerHTML = '<option value="">请选择玩家</option>' + S.players.map((p) => '<option value="' + p.id + '">' + safe(p.game_name) + '</option>').join("");
+    if (prevPid && S.players.some((p) => p.id === prevPid)) psel.value = prevPid;
+
+    if (!window.Chart) {
+      chartFallback($("rankChart").parentElement);
+      chartFallback($("trendChart").parentElement);
+      return;
+    }
+
+    const aggs = S.players.map(playerAgg);
+    const metric = $("chartMetric").value === "power" ? "power" : "merit";
+    const metricLabel = metric === "power" ? "势力值" : "武勋";
+    const key = metric === "power" ? "latestPower" : "latestMerit";
+    const topN = parseInt($("chartTop").value, 10) || 0;
+    let list = aggs.slice().sort((a, b) => b[key] - a[key]);
+    if (topN > 0) list = list.slice(0, topN);
+
+    const rankCanvas = $("rankChart");
+    destroyChart("rank");
+    chartInstances.rank = new window.Chart(rankCanvas, {
+      type: "bar",
+      data: {
+        labels: list.map((a) => a.p.game_name),
+        datasets: [{
+          label: metricLabel,
+          data: list.map((a) => a[key]),
+          backgroundColor: "rgba(212,175,55,.7)",
+          borderColor: "#f0c75e",
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { color: "#98a2b3" } },
+          x: { ticks: { color: "#98a2b3", maxRotation: 45, autoSkip: true } }
+        }
+      }
+    });
+
+    const pid = psel.value;
+    const recs = pid ? recordsOf(pid) : [];
+    const trendCanvas = $("trendChart");
+    destroyChart("trend");
+    chartInstances.trend = new window.Chart(trendCanvas, {
+      type: "line",
+      data: {
+        labels: recs.map((r) => fmtTime(r.recorded_at)),
+        datasets: [
+          { label: "武勋", data: recs.map((r) => Number(r.merit)), borderColor: "#f0c75e", backgroundColor: "rgba(240,199,94,.15)", tension: 0.3, yAxisID: "y" },
+          { label: "势力值", data: recs.map((r) => Number(r.power)), borderColor: "#5b8def", backgroundColor: "rgba(91,141,239,.15)", tension: 0.3, yAxisID: "y1" }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          y: { position: "left", beginAtZero: true, ticks: { color: "#98a2b3" } },
+          y1: { position: "right", beginAtZero: true, grid: { drawOnChartArea: false }, ticks: { color: "#98a2b3" } },
+          x: { ticks: { color: "#98a2b3", maxRotation: 45, autoSkip: true } }
+        }
+      }
+    });
+  }
   /* ---------- 同盟设置 ---------- */
   function renderSettings() {
     if (!S.active) return;
@@ -618,6 +757,13 @@
     $("comparePlayer").addEventListener("change", (e) => renderCompareDetail(e.target.value));
     $("compareStart").addEventListener("change", updateCompareResult);
     $("compareEnd").addEventListener("change", updateCompareResult);
+
+    // 图表与导出
+    $("chartMetric").addEventListener("change", renderCharts);
+    $("chartTop").addEventListener("change", renderCharts);
+    $("chartPlayer").addEventListener("change", renderCharts);
+    $("exportCsvBtn").addEventListener("click", exportRosterCsv);
+    $("exportRecordsCsv").addEventListener("click", exportRecordsCsv);
 
     // 设置
     $("allianceSettingsForm").addEventListener("submit", async (e) => {
