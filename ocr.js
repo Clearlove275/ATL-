@@ -193,7 +193,7 @@
         rows.push({
           name,
           merit: merits[0],
-          meritTotal: merits.length > 1 ? merits[1] : null,
+          power: merits.length > 1 ? merits[1] : null,
           contributionTotal: total,
           contributionWeek: week
         });

@@ -682,6 +682,7 @@
       '<tr>' +
       '<td><input data-batch="name" data-i="' + i + '" value="' + safe(r.name || "") + '" /></td>' +
       '<td><input data-batch="merit" data-i="' + i + '" type="number" min="0" value="' + (r.merit != null ? r.merit : "") + '" /></td>' +
+      '<td><input data-batch="power" data-i="' + i + '" type="number" min="0" value="' + (r.power != null ? r.power : "") + '" /></td>' +
       '<td><input data-batch="contributionTotal" data-i="' + i + '" type="number" min="0" value="' + (r.contributionTotal != null ? r.contributionTotal : "") + '" /></td>' +
       '<td><input data-batch="contributionWeek" data-i="' + i + '" type="number" min="0" value="' + (r.contributionWeek != null ? r.contributionWeek : "") + '" /></td>' +
       '<td><button class="link-button danger" data-batchremove="' + i + '">移除</button></td>' +
@@ -703,12 +704,13 @@
   async function batchSave() {
     if (!S.active) return;
     const inputs = document.querySelectorAll("#batchBody input[data-batch]");
-    const rows = batchRows.map(() => ({ name: "", merit: 0, contributionTotal: 0, contributionWeek: 0 }));
+    const rows = batchRows.map(() => ({ name: "", merit: 0, power: 0, contributionTotal: 0, contributionWeek: 0 }));
     inputs.forEach((inp) => {
       const i = Number(inp.dataset.i);
       const f = inp.dataset.batch;
       if (f === "name") rows[i].name = inp.value;
       else if (f === "merit") rows[i].merit = Number(inp.value) || 0;
+      else if (f === "power") rows[i].power = Number(inp.value) || 0;
       else if (f === "contributionTotal") rows[i].contributionTotal = Number(inp.value) || 0;
       else if (f === "contributionWeek") rows[i].contributionWeek = Number(inp.value) || 0;
     });
@@ -726,7 +728,7 @@
         await Store.records.add(S.active.id, {
           player_id: player.id,
           merit: r.merit,
-          power: 0,
+          power: r.power,
           contribution_total: r.contributionTotal,
           contribution_week: r.contributionWeek,
           source: "ocr",

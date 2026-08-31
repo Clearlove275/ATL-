@@ -8,6 +8,11 @@ _test_*.js
 _ocr*.json
 _ocr*.html
 _charts.png
+_vision_ocr.txt
+_push_api.py
+_avt_*.py
+_avt_*.json
+_avt.zip
 
 # 源数据/截图（非代码）
 副本维度评估指标表.xlsx
