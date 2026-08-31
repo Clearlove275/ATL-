@@ -68,32 +68,45 @@ Deno.serve(async (req) => {
       throw new Error("缺少 image 字段（data URL）");
     }
 
-    const resp = await fetch(`${VISION_BASE_URL}/chat/completions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${VISION_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: VISION_MODEL,
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "image_url", image_url: { url: image } },
-              { type: "text", text: PROMPT },
-            ],
+    // 自动重试：遇到 429 限流 / 5xx / 网络错误时最多重试 3 次
+    let data: any = null;
+    let lastError = "";
+    for (let attempt = 0; attempt < 3 && !data; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 8000 * attempt));
+      try {
+        const resp = await fetch(`${VISION_BASE_URL}/chat/completions`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${VISION_API_KEY}`,
+            "Content-Type": "application/json",
           },
-        ],
-      }),
-    });
-
-    if (!resp.ok) {
-      const errText = await resp.text();
-      throw new Error(`vision api ${resp.status}: ${errText.slice(0, 200)}`);
+          body: JSON.stringify({
+            model: VISION_MODEL,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "image_url", image_url: { url: image } },
+                  { type: "text", text: PROMPT },
+                ],
+              },
+            ],
+          }),
+        });
+        if (resp.ok) {
+          data = await resp.json();
+          break;
+        }
+        const errText = await resp.text();
+        lastError = `vision api ${resp.status}: ${errText.slice(0, 200)}`;
+        const retryable = resp.status === 429 || resp.status >= 500;
+        if (!retryable) break;
+      } catch (e) {
+        lastError = e instanceof Error ? e.message : String(e);
+      }
     }
+    if (!data) throw new Error(lastError || "vision api failed");
 
-    const data = await resp.json();
     const text: string = data?.choices?.[0]?.message?.content ?? "";
     const json = extractJson(text);
 
