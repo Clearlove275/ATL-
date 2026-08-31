@@ -1,0 +1,18 @@
+# 本地调试临时文件
+_ref/
+_ref_*.js
+_ref_*.css
+_ref_*.html
+_excel_dump.txt
+_test_ocr.js
+
+# 源数据（非代码）
+副本维度评估指标表.xlsx
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 依赖 / 日志
+node_modules/
+*.log

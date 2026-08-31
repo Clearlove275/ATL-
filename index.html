@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="率土之滨同盟数据库：识别游戏截图自动录入武勋与势力值，支持多用户同盟数据库、实时更新、任意两次时间的变化值对比与排序。" />
+  <meta name="keywords" content="率土之滨,同盟,武勋,势力值,OCR,数据统计,赛季考核" />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="率土同盟数据库" />
+  <meta property="og:description" content="截图识别自动录入，多用户同盟数据库，实时更新与变化值对比。" />
+  <meta property="og:type" content="website" />
+  <title>率土同盟数据库｜武勋 / 势力值统计</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <!-- 登录 -->
+  <section id="authView" class="auth-view">
+    <div class="auth-card">
+      <div class="brand-lockup">
+        <span class="brand-mark">率</span>
+        <div>
+          <h1>率土同盟数据库</h1>
+          <p>武勋 / 势力值统计 · 截图识别 · 实时更新</p>
+        </div>
+      </div>
+      <div class="auth-tabs">
+        <button id="tabLogin" class="active">登录</button>
+        <button id="tabSignup">注册</button>
+      </div>
+      <form id="authForm" class="auth-form">
+        <label>邮箱<input id="authEmail" type="email" required placeholder="you@example.com" autocomplete="username" /></label>
+        <label>密码<input id="authPassword" type="password" required minlength="6" placeholder="至少 6 位" autocomplete="current-password" /></label>
+        <button class="primary block" id="authSubmit" type="submit">登录</button>
+        <p id="authMsg" class="auth-msg"></p>
+      </form>
+      <div class="auth-divider"><span>或</span></div>
+      <button class="ghost block" id="authLocalDemo">进入本地演示模式（数据仅保存在本浏览器）</button>
+      <p class="auth-hint">正式多用户同盟数据库需在 <code>config.js</code> 中配置 Supabase，详见 README。</p>
+    </div>
+  </section>
+
+  <!-- 主应用 -->
+  <div id="app" class="app hidden">
+    <header class="topbar">
+      <div class="brand" id="homeBtn">
+        <span class="brand-mark">率</span>
+        <div><strong>率土同盟数据库</strong><small id="topSeason">武勋 / 势力值统计</small></div>
+      </div>
+      <div class="topbar-right">
+        <span id="topUser" class="top-user"></span>
+        <button id="signOutBtn" class="ghost small">退出</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- 我的同盟 -->
+      <section id="homeView" class="view">
+        <div class="section-heading"><div><p class="eyebrow">ALLIANCE</p><h2>我的同盟</h2><p>创建一个同盟数据库，或通过邀请码加入盟友的同盟。</p></div></div>
+        <div class="home-grid">
+          <section class="panel">
+            <div class="panel-title"><h3>创建同盟</h3></div>
+            <form id="createForm" class="form-grid">
+              <label>同盟名称 *<input id="createName" required placeholder="例如：纵横四海" /></label>
+              <label>赛季名称<input id="createSeason" placeholder="例如：征服赛季 · 太师乱汉" /></label>
+              <label>你的游戏昵称<input id="createGameName" placeholder="用于自动登记到盟员名单" /></label>
+              <div class="wide form-footer"><span></span><button class="primary" type="submit">创建同盟</button></div>
+            </form>
+          </section>
+          <section class="panel">
+            <div class="panel-title"><h3>加入同盟</h3></div>
+            <form id="joinForm" class="form-grid">
+              <label>邀请码 *<input id="joinCode" required placeholder="8 位邀请码，例如 A1B2C3D4" style="text-transform:uppercase" /></label>
+              <label>你的游戏昵称<input id="joinGameName" placeholder="用于自动登记到盟员名单" /></label>
+              <div class="wide form-footer"><span></span><button class="primary" type="submit">加入同盟</button></div>
+            </form>
+          </section>
+        </div>
+        <section class="panel">
+          <div class="panel-title"><h3>已加入的同盟</h3><span id="allianceCount" class="muted"></span></div>
+          <div id="allianceList" class="alliance-list"></div>
+        </section>
+      </section>
+
+      <!-- 同盟数据 -->
+      <section id="allianceView" class="view">
+        <div class="alliance-head">
+          <div>
+            <button id="backHome" class="ghost small">← 我的同盟</button>
+            <h2 id="allianceTitle">同盟</h2>
+            <p id="allianceMeta" class="muted"></p>
+          </div>
+          <div class="alliance-head-actions">
+            <span class="pill" id="rolePill">成员</span>
+            <button id="refreshBtn" class="ghost small">刷新</button>
+            <button id="settingsBtn" class="ghost small">同盟设置</button>
+          </div>
+        </div>
+
+        <nav class="tabs" id="allianceTabs">
+          <button class="active" data-view="dashboard">数据看板</button>
+          <button data-view="import">导入数据</button>
+          <button data-view="roster">成员数据</button>
+          <button data-view="compare">变化值对比</button>
+          <button data-view="settings">同盟设置</button>
+        </nav>
+
+        <!-- 看板 -->
+        <section id="dashboardView" class="tab-view active">
+          <div class="metric-grid">
+            <article class="metric"><span>盟员数量</span><strong id="statPlayers">0</strong><small>已登记玩家</small></article>
+            <article class="metric accent"><span>武勋最高</span><strong id="statTopMerit">—</strong><small>全盟最新值最高</small></article>
+            <article class="metric"><span>势力最高</span><strong id="statTopPower">—</strong><small>全盟最新值最高</small></article>
+            <article class="metric"><span>记录总数</span><strong id="statRecords">0</strong><small>全部导入快照</small></article>
+          </div>
+          <div class="grid-two">
+            <section class="panel"><div class="panel-title"><div><p class="eyebrow">RANKING</p><h3>武勋排行榜</h3></div><span class="pill">实时</span></div><div id="meritRank" class="ranking"></div></section>
+            <section class="panel"><div class="panel-title"><div><p class="eyebrow">RANKING</p><h3>势力值排行榜</h3></div><span class="pill">实时</span></div><div id="powerRank" class="ranking"></div></section>
+          </div>
+        </section>
+
+        <!-- 导入 -->
+        <section id="importView" class="tab-view">
+          <div class="section-heading"><div><p class="eyebrow">OCR IMPORT</p><h2>截图识别，自动录入</h2><p>上传游戏截图，识别武勋与势力值。识别在浏览器本地进行，首次使用需联网加载中文识别组件；<b>请务必核对识别结果</b>。</p></div></div>
+          <div class="scan-layout">
+            <section class="panel uploader">
+              <div id="dropZone" class="drop-zone">
+                <input id="imageInput" type="file" accept="image/*" hidden />
+                <div class="upload-icon">⌁</div>
+                <h3>上传游戏截图</h3>
+                <p>拖入图片，或点击选择。建议使用「主公簿 / 势力」页面截图。</p>
+                <button id="chooseImage" class="secondary">选择截图</button>
+              </div>
+              <img id="preview" class="preview hidden" alt="待识别截图预览" />
+              <div id="ocrStatus" class="ocr-status">尚未选择截图</div>
+              <button id="runOcr" class="secondary full" disabled>开始识别</button>
+            </section>
+            <section class="panel">
+              <div class="panel-title"><h3>识别结果与录入</h3><button id="pasteText" class="ghost small">粘贴文字识别</button></div>
+              <div id="manualNote" class="ocr-text-note">无法识别时，可直接在下方手动填写。</div>
+              <div id="ocrTextWrap" class="hidden">
+                <textarea id="ocrText" rows="5" placeholder="把截图识别文字粘贴到这里，然后点击“从文字提取”自动填写武勋 / 势力值"></textarea>
+                <button type="button" id="parseText" class="ghost small" style="margin-top:8px">从文字提取字段</button>
+              </div>
+              <form id="recordForm" class="form-grid">
+                <label>玩家 *<select id="recordPlayer" required></select></label>
+                <label>武勋<input id="recordMerit" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></label>
+                <label>势力值<input id="recordPower" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></label>
+                <label>记录时间 *<input id="recordTime" type="datetime-local" required /></label>
+                <label>来源<select id="recordSource"><option value="manual">手动录入</option><option value="ocr">截图识别</option></select></label>
+                <label class="wide">备注<input id="recordNote" placeholder="例如：开荒期 / 州战前 / 结算前" /></label>
+                <div class="wide form-footer"><span></span><button class="primary" type="submit">保存这条记录</button></div>
+              </form>
+            </section>
+          </div>
+        </section>
+
+        <!-- 成员数据 -->
+        <section id="rosterView" class="tab-view">
+          <div class="section-heading split">
+            <div><p class="eyebrow">ROSTER</p><h2>成员数据与排序</h2><p>点击表头可排序。变化值按下方选定的两次时间计算：取「结束时间点之前最近一次」减去「起始时间点之前最近一次」的快照值。</p></div>
+            <button id="addPlayerBtn" class="primary">+ 新增玩家</button>
+          </div>
+          <section class="panel table-panel">
+            <div class="table-tools change-tools">
+              <span>变化值区间：</span>
+              <input id="deltaStart" type="datetime-local" title="起始时间" />
+              <span class="muted">→</span>
+              <input id="deltaEnd" type="datetime-local" title="结束时间" />
+              <select id="deltaPreset">
+                <option value="season">全赛季（最早→最新）</option>
+                <option value="7d">最近 7 天</option>
+                <option value="30d">最近 30 天</option>
+                <option value="custom">自定义时间</option>
+              </select>
+              <input id="playerSearch" placeholder="搜索昵称 / 团组" />
+            </div>
+            <div class="table-wrap">
+              <table id="rosterTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th data-sort="game_name">玩家</th>
+                    <th data-sort="team">团组</th>
+                    <th data-sort="latest_merit">最新武勋</th>
+                    <th data-sort="latest_power">最新势力值</th>
+                    <th data-sort="delta_merit">Δ武勋</th>
+                    <th data-sort="delta_power">Δ势力值</th>
+                    <th data-sort="count">记录数</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="rosterBody"></tbody>
+              </table>
+            </div>
+            <div class="table-foot" id="rosterSummary"></div>
+          </section>
+        </section>
+
+        <!-- 变化值对比 -->
+        <section id="compareView" class="tab-view">
+          <div class="section-heading"><div><p class="eyebrow">DELTA</p><h2>任意两次时间的变化值对比</h2><p>选择一名玩家，再选择其历史快照中的「起始」与「结束」两条记录，即可查看武勋与势力值的变化。</p></div></div>
+          <section class="panel">
+            <div class="compare-select">
+              <label>选择玩家<select id="comparePlayer"></select></label>
+              <label>起始快照<select id="compareStart"></select></label>
+              <span class="muted">→</span>
+              <label>结束快照<select id="compareEnd"></select></label>
+            </div>
+            <div id="compareResult" class="compare-result"></div>
+          </section>
+          <section class="panel table-panel">
+            <div class="panel-title"><h3>该玩家的历史快照</h3><span id="compareCount" class="muted"></span></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>记录时间</th><th>武勋</th><th>势力值</th><th>来源</th><th>备注</th><th></th></tr></thead>
+                <tbody id="compareRecords"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- 设置 -->
+        <section id="settingsView" class="tab-view">
+          <div class="grid-two">
+            <section class="panel">
+              <div class="panel-title"><h3>同盟信息</h3></div>
+              <form id="allianceSettingsForm" class="form-grid">
+                <label>同盟名称<input id="settingsName" required /></label>
+                <label>赛季名称<input id="settingsSeason" /></label>
+                <label>邀请码<input id="settingsInvite" readonly style="text-transform:uppercase" /><button type="button" id="copyInvite" class="ghost small">复制</button></label>
+                <div class="wide form-footer"><span></span><button class="primary" type="submit">保存修改</button></div>
+              </form>
+            </section>
+            <section class="panel">
+              <div class="panel-title"><h3>同盟成员（账号权限）</h3></div>
+              <p class="muted">这里显示已通过邀请码加入的账号。盟主可将成员设为管理员。</p>
+              <div id="memberManage" class="member-manage"></div>
+            </section>
+          </div>
+          <section class="panel danger-panel">
+            <div class="panel-title"><h3>危险操作</h3></div>
+            <button id="leaveAllianceBtn" class="danger">退出同盟</button>
+            <button id="deleteAllianceBtn" class="danger">删除同盟（仅盟主）</button>
+          </section>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="ocr.js"></script>
+  <script src="store.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
