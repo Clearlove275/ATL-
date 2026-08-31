@@ -11,9 +11,8 @@
 window.APP_CONFIG = {
   backend: "local",
   supabaseUrl: "https://uqxjimxhtvjqpkmeqbnn.supabase.co",
-  supabaseAnonKey: "YOUR-ANON-KEY",
+  supabaseAnonKey: "sb_publishable_e9KyKQVfc_12_FpFgO_PPg_pfY4JWSa",
 
   // 视觉识别后端（Supabase Edge Function）
-  visionBackendUrl: "https://uqxjimxhtvjqpkmeqbnn.supabase.co/functions/v1/vision-ocr",
-  visionBackendKey: "atl2026"
+  visionBackendUrl: "https://uqxjimxhtvjqpkmeqbnn.supabase.co/functions/v1/vision-ocr"
 };

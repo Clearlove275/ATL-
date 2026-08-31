@@ -4,14 +4,12 @@
 //   VISION_API_KEY    视觉模型密钥（智谱 API Key）
 //   VISION_BASE_URL   视觉模型兼容端点
 //   VISION_MODEL      模型名
-//   VISION_FUNC_KEY   （可选）自定义访问密钥，前端通过 apikey 头传过来校验
 
 const VISION_API_KEY = Deno.env.get("VISION_API_KEY") ?? "";
 const VISION_BASE_URL =
   Deno.env.get("VISION_BASE_URL") ??
   "https://open.bigmodel.cn/api/paas/v4";
 const VISION_MODEL = Deno.env.get("VISION_MODEL") ?? "GLM-4.6V-Flash";
-const VISION_FUNC_KEY = Deno.env.get("VISION_FUNC_KEY") ?? "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,12 +62,6 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
   try {
-    if (VISION_FUNC_KEY && req.headers.get("apikey") !== VISION_FUNC_KEY) {
-      return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
     const body = await req.json();
     const image = body.image as string;
     if (!image || typeof image !== "string") {

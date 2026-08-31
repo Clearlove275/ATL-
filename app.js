@@ -688,7 +688,7 @@
     if (cfg.visionBackendUrl) {
       try {
         $("ocrStatus").textContent = "正在视觉识别…";
-        const data = await window.OCR.recognizeViaBackend($("preview").src, cfg.visionBackendUrl, cfg.visionBackendKey || "", cfg.supabaseAnonKey || "");
+        const data = await window.OCR.recognizeViaBackend($("preview").src, cfg.visionBackendUrl, cfg.supabaseAnonKey || "");
         $("ocrText").value = data.text || "";
         applyVisionResult(data.json);
         $("ocrStatus").textContent = "视觉识别完成，请核对后保存。";
