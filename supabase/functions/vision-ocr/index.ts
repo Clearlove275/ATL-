@@ -1,15 +1,16 @@
 // Supabase Edge Function：视觉识别（率土之滨截图 → 结构化 JSON）
-// 部署后在 Supabase 设置以下 Secrets：
-//   VISION_API_KEY    视觉模型密钥
-//   VISION_BASE_URL   视觉模型兼容端点（以 /compatible-mode/v1 结尾）
+// 默认使用智谱 GLM-4.6V-Flash（OpenAI 兼容）。
+// 部署后在 Supabase 设置以下 Secrets（可覆盖默认值）：
+//   VISION_API_KEY    视觉模型密钥（智谱 API Key）
+//   VISION_BASE_URL   视觉模型兼容端点
 //   VISION_MODEL      模型名
 //   VISION_FUNC_KEY   （可选）自定义访问密钥，前端通过 apikey 头传过来校验
 
 const VISION_API_KEY = Deno.env.get("VISION_API_KEY") ?? "";
 const VISION_BASE_URL =
   Deno.env.get("VISION_BASE_URL") ??
-  "https://ws-ljk2aslepsadtndx.cn-beijing.maas.aliyuncs.com/compatible-mode/v1";
-const VISION_MODEL = Deno.env.get("VISION_MODEL") ?? "qwen3.7-plus";
+  "https://open.bigmodel.cn/api/paas/v4";
+const VISION_MODEL = Deno.env.get("VISION_MODEL") ?? "GLM-4.6V-Flash";
 const VISION_FUNC_KEY = Deno.env.get("VISION_FUNC_KEY") ?? "";
 
 const corsHeaders = {

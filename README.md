@@ -67,10 +67,10 @@ window.APP_CONFIG = {
 
 1. 在 Supabase 项目中部署 Edge Function `supabase/functions/vision-ocr`：
    Dashboard → Edge Functions → 新建 `vision-ocr`，把 `index.ts` 内容粘贴进去。
-2. 在该 Function 的 **Secrets** 中设置：
-   - `VISION_API_KEY`：视觉模型密钥
-   - `VISION_BASE_URL`：以 `/compatible-mode/v1` 结尾的兼容端点
-   - `VISION_MODEL`：模型名
+2. 在该 Function 的 **Secrets** 中设置（推荐智谱 GLM 视觉模型，代码已内置为默认值）：
+   - `VISION_API_KEY`：智谱 API Key（形如 `xxx.yyy`）
+   - `VISION_BASE_URL`：`https://open.bigmodel.cn/api/paas/v4`
+   - `VISION_MODEL`：`GLM-4.6V-Flash`
    - `VISION_FUNC_KEY`（可选）：自定义访问密钥，用于简单校验
 3. 在 `config.js` 中填入：
    ```js
