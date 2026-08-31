@@ -498,8 +498,8 @@
         datasets: [{
           label: metricLabel,
           data: list.map((a) => a[key]),
-          backgroundColor: "rgba(212,175,55,.7)",
-          borderColor: "#f0c75e",
+          backgroundColor: "rgba(224,68,60,.78)",
+          borderColor: "#ff6b5e",
           borderWidth: 1,
           borderRadius: 4
         }]
@@ -509,8 +509,8 @@
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: true, ticks: { color: "#98a2b3" } },
-          x: { ticks: { color: "#98a2b3", maxRotation: 45, autoSkip: true } }
+          y: { beginAtZero: true, ticks: { color: "#c49da1" } },
+          x: { ticks: { color: "#c49da1", maxRotation: 45, autoSkip: true } }
         }
       }
     });
@@ -524,8 +524,8 @@
       data: {
         labels: recs.map((r) => fmtTime(r.recorded_at)),
         datasets: [
-          { label: "武勋", data: recs.map((r) => Number(r.merit)), borderColor: "#f0c75e", backgroundColor: "rgba(240,199,94,.15)", tension: 0.3, yAxisID: "y" },
-          { label: "势力值", data: recs.map((r) => Number(r.power)), borderColor: "#5b8def", backgroundColor: "rgba(91,141,239,.15)", tension: 0.3, yAxisID: "y1" }
+          { label: "武勋", data: recs.map((r) => Number(r.merit)), borderColor: "#ff6b5e", backgroundColor: "rgba(240,199,94,.15)", tension: 0.3, yAxisID: "y" },
+          { label: "势力值", data: recs.map((r) => Number(r.power)), borderColor: "#ffb24d", backgroundColor: "rgba(255,178,77,.15)", tension: 0.3, yAxisID: "y1" }
         ]
       },
       options: {
@@ -533,9 +533,9 @@
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
         scales: {
-          y: { position: "left", beginAtZero: true, ticks: { color: "#98a2b3" } },
-          y1: { position: "right", beginAtZero: true, grid: { drawOnChartArea: false }, ticks: { color: "#98a2b3" } },
-          x: { ticks: { color: "#98a2b3", maxRotation: 45, autoSkip: true } }
+          y: { position: "left", beginAtZero: true, ticks: { color: "#c49da1" } },
+          y1: { position: "right", beginAtZero: true, grid: { drawOnChartArea: false }, ticks: { color: "#c49da1" } },
+          x: { ticks: { color: "#c49da1", maxRotation: 45, autoSkip: true } }
         }
       }
     });
