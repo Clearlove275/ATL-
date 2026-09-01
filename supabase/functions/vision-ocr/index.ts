@@ -1,15 +1,12 @@
 // Supabase Edge Function：视觉识别（率土之滨截图 → 结构化 JSON）
-// 默认使用智谱 GLM-4.6V-Flash（OpenAI 兼容）。
-// 部署后在 Supabase 设置以下 Secrets（可覆盖默认值）：
-//   VISION_API_KEY    视觉模型密钥（智谱 API Key）
-//   VISION_BASE_URL   视觉模型兼容端点
-//   VISION_MODEL      模型名
-
-const VISION_API_KEY = Deno.env.get("VISION_API_KEY") ?? "";
-const VISION_BASE_URL =
-  Deno.env.get("VISION_BASE_URL") ??
-  "https://open.bigmodel.cn/api/paas/v4";
-const VISION_MODEL = Deno.env.get("VISION_MODEL") ?? "GLM-4.6V-Flash";
+// 模型优先级：qwen（主，速度快）→ GLM（备用，免费模型，qwen 额度用尽后自动兜底）
+// 在 Supabase 配置以下 Secrets：
+//   VISION_API_KEY     qwen 视觉模型密钥
+//   VISION_BASE_URL    qwen OpenAI 兼容端点（不含 /chat/completions）
+//   VISION_MODEL       qwen 模型名
+//   VISION_API_KEY_2   GLM 视觉模型密钥（备用）
+//   VISION_BASE_URL_2  GLM OpenAI 兼容端点
+//   VISION_MODEL_2     GLM 模型名
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,6 +54,81 @@ function extractJson(text: string): unknown | null {
   return null;
 }
 
+type Provider = {
+  name: string;
+  key: string;
+  baseUrl: string;
+  model: string;
+  enableThinking?: boolean;
+  retries: number;
+};
+
+const providers: Provider[] = [
+  {
+    name: "qwen",
+    key: Deno.env.get("VISION_API_KEY") ?? "",
+    baseUrl: (Deno.env.get("VISION_BASE_URL") ?? "").replace(/\/$/, ""),
+    model: Deno.env.get("VISION_MODEL") ?? "qwen3.7-plus",
+    enableThinking: false, // 关闭思考，显著降低延迟
+    retries: 1,
+  },
+  {
+    name: "glm",
+    key: Deno.env.get("VISION_API_KEY_2") ?? "",
+    baseUrl: (Deno.env.get("VISION_BASE_URL_2") ?? "").replace(/\/$/, ""),
+    model: Deno.env.get("VISION_MODEL_2") ?? "GLM-4.6V-Flash",
+    retries: 2,
+  },
+].filter((p) => p.key && p.baseUrl);
+
+async function callProvider(
+  p: Provider,
+  image: string,
+): Promise<{ text: string }> {
+  const url = `${p.baseUrl}/chat/completions`;
+  const payload: Record<string, unknown> = {
+    model: p.model,
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "image_url", image_url: { url: image } },
+          { type: "text", text: PROMPT },
+        ],
+      },
+    ],
+  };
+  if (p.enableThinking === false) payload.enable_thinking = false;
+
+  let lastError = "";
+  for (let attempt = 0; attempt <= p.retries; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 4000 * attempt));
+    try {
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${p.key}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const text: string = data?.choices?.[0]?.message?.content ?? "";
+        if (!text) throw new Error("empty content");
+        return { text };
+      }
+      const errText = await resp.text();
+      lastError = `${p.name} ${resp.status}: ${errText.slice(0, 200)}`;
+      const retryable = resp.status === 429 || resp.status >= 500;
+      if (!retryable) break;
+    } catch (e) {
+      lastError = `${p.name}: ${e instanceof Error ? e.message : String(e)}`;
+    }
+  }
+  throw new Error(lastError || `${p.name} failed`);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -67,49 +139,21 @@ Deno.serve(async (req) => {
     if (!image || typeof image !== "string") {
       throw new Error("缺少 image 字段（data URL）");
     }
+    if (!providers.length) throw new Error("未配置视觉模型密钥");
 
-    // 自动重试：遇到 429 限流 / 5xx / 网络错误时最多重试 3 次
-    let data: any = null;
-    let lastError = "";
-    for (let attempt = 0; attempt < 3 && !data; attempt++) {
-      if (attempt > 0) await new Promise((r) => setTimeout(r, 8000 * attempt));
+    let text = "";
+    const errors: string[] = [];
+    for (const p of providers) {
       try {
-        const resp = await fetch(`${VISION_BASE_URL}/chat/completions`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${VISION_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: VISION_MODEL,
-            messages: [
-              {
-                role: "user",
-                content: [
-                  { type: "image_url", image_url: { url: image } },
-                  { type: "text", text: PROMPT },
-                ],
-              },
-            ],
-          }),
-        });
-        if (resp.ok) {
-          data = await resp.json();
-          break;
-        }
-        const errText = await resp.text();
-        lastError = `vision api ${resp.status}: ${errText.slice(0, 200)}`;
-        const retryable = resp.status === 429 || resp.status >= 500;
-        if (!retryable) break;
+        text = (await callProvider(p, image)).text;
+        break;
       } catch (e) {
-        lastError = e instanceof Error ? e.message : String(e);
+        errors.push(e instanceof Error ? e.message : String(e));
       }
     }
-    if (!data) throw new Error(lastError || "vision api failed");
+    if (!text) throw new Error(errors.join(" | ") || "视觉识别失败");
 
-    const text: string = data?.choices?.[0]?.message?.content ?? "";
     const json = extractJson(text);
-
     return new Response(JSON.stringify({ ok: true, text, json }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

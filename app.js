@@ -740,6 +740,111 @@
     renderBatchRows();
   }
 
+  /* ---------- 视频识别 ---------- */
+  let videoUrl = null;
+  function setVideo(file) {
+    if (!file) return;
+    if (!file.type || !file.type.startsWith("video/")) { toast("请选择视频文件"); return; }
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    videoUrl = URL.createObjectURL(file);
+    const v = $("videoPreview");
+    v.src = videoUrl;
+    v.classList.remove("hidden");
+    $("runVideoOcr").disabled = false;
+    $("videoStatus").textContent = "已选择：" + file.name + "，点击「开始识别视频」。";
+  }
+
+  function captureFrame(video, time, maxW) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { video.removeEventListener("seeked", onSeek); reject(new Error("视频抽帧超时")); }, 8000);
+      const onSeek = () => {
+        clearTimeout(timer);
+        video.removeEventListener("seeked", onSeek);
+        try {
+          const scale = Math.min(1, maxW / video.videoWidth);
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+          canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+          canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        } catch (e) { reject(e); }
+      };
+      video.addEventListener("seeked", onSeek);
+      video.currentTime = time;
+    });
+  }
+
+  function mergeVisionRows(allRows) {
+    const map = new Map();
+    const pick = (a, b) => (b == null || b === 0 ? a : b);
+    for (const row of allRows) {
+      if (!row || !row.name) continue;
+      const key = String(row.name).trim();
+      if (!key) continue;
+      let cur = map.get(key);
+      if (!cur) { cur = { name: key, merit: 0, power: 0, contributionTotal: 0, contributionWeek: 0 }; map.set(key, cur); }
+      cur.merit = pick(cur.merit, toNum(row.merit));
+      cur.power = pick(cur.power, toNum(row.power));
+      cur.contributionTotal = pick(cur.contributionTotal, toNum(row.contributionTotal));
+      cur.contributionWeek = pick(cur.contributionWeek, toNum(row.contributionWeek));
+    }
+    return Array.from(map.values());
+  }
+
+  async function runVideoOcr() {
+    const v = $("videoPreview");
+    if (!v.src || !videoUrl) return;
+    const cfg = window.APP_CONFIG || {};
+    if (!cfg.visionBackendUrl) { $("videoStatus").textContent = "未配置视觉识别后端，请改用截图识别。"; return; }
+    const interval = Math.max(0.5, Number($("videoInterval").value) || 2);
+    const maxFrames = Math.min(40, Math.max(2, Math.round(Number($("videoMaxFrames").value) || 14)));
+
+    let duration = 0;
+    try {
+      duration = await new Promise((res, rej) => {
+        if (v.readyState >= 1 && isFinite(v.duration)) { res(v.duration); return; }
+        v.addEventListener("loadedmetadata", () => res(v.duration), { once: true });
+        v.addEventListener("error", () => rej(new Error("视频加载失败")), { once: true });
+        v.load();
+      });
+    } catch (e) { $("videoStatus").textContent = "视频加载失败：" + e.message; return; }
+    if (!duration || !isFinite(duration)) { $("videoStatus").textContent = "无法读取视频时长，请更换视频。"; return; }
+
+    const count = Math.max(2, Math.min(maxFrames, Math.floor(duration / interval)));
+    const times = Array.from({ length: count }, (_, i) => Math.min(duration - 0.05, interval * (i + 0.5)));
+
+    const btn = $("runVideoOcr");
+    btn.disabled = true;
+    const allRows = [];
+    let okFrames = 0;
+    for (let i = 0; i < times.length; i++) {
+      $("videoStatus").textContent = "正在识别第 " + (i + 1) + " / " + times.length + " 帧…";
+      try {
+        const dataUrl = await captureFrame(v, times[i], 1280);
+        const data = await window.OCR.recognizeViaBackend(dataUrl, cfg.visionBackendUrl, cfg.supabaseAnonKey || "");
+        const arr = Array.isArray(data.json) ? data.json : (data.json ? [data.json] : []);
+        allRows.push(...arr);
+        okFrames++;
+      } catch (e) {
+        // 单帧失败继续下一帧
+      }
+    }
+    if (okFrames === 0) {
+      $("videoStatus").textContent = "视频识别失败，请重试或改用截图识别。";
+      btn.disabled = false;
+      return;
+    }
+    batchRows = mergeVisionRows(allRows);
+    renderBatchRows();
+    if (batchRows.length) {
+      $("batchPanel").classList.remove("hidden");
+      $("videoStatus").textContent = "已从 " + okFrames + " 帧识别出 " + batchRows.length + " 名成员，请核对后保存。";
+    } else {
+      $("videoStatus").textContent = "未识别到成员数据，请调整采样间隔后重试。";
+    }
+    btn.disabled = false;
+  }
+
   function findPlayerByName(name) {
     const n = (name || "").trim().toLowerCase();
     return S.players.find((p) => (p.game_name || "").trim().toLowerCase() === n);
@@ -892,6 +997,11 @@
     $("parseText").onclick = () => applyParsed($("ocrText").value);
     $("recordForm").addEventListener("submit", saveRecord);
     $("batchSaveBtn").addEventListener("click", batchSave);
+
+    // 视频识别
+    $("chooseVideo").onclick = () => $("videoInput").click();
+    $("videoInput").onchange = (e) => setVideo(e.target.files[0]);
+    $("runVideoOcr").onclick = runVideoOcr;
 
     // 成员数据
     $("addPlayerBtn").onclick = () => openPlayerModal(null);

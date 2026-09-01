@@ -214,8 +214,9 @@
 
   // 调用视觉识别后端（Supabase Edge Function），返回 { ok, text, json }
   // anonKey 为 Supabase Publishable 公钥，通过 apikey 头传给网关鉴权
+  // 若已是 data URL（例如视频抽帧）则直接透传，避免二次重编码
   async function recognizeViaBackend(imageUrl, baseUrl, anonKey) {
-    const dataUrl = await imageToDataUrl(imageUrl);
+    const dataUrl = /^data:/.test(imageUrl) ? imageUrl : await imageToDataUrl(imageUrl);
     const res = await fetch(baseUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", "apikey": anonKey || "" },
