@@ -350,3 +350,34 @@ td.num { font-variant-numeric: tabular-nums; }
 .fb-like { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 16px; padding: 3px 10px; font-size: 12px; cursor: pointer; margin-right: 8px; transition: color .15s, border-color .15s; }
 .fb-like:hover { color: var(--gold2); border-color: rgba(224,68,60,.5); }
 .fb-like.liked { color: var(--gold2); border-color: rgba(224,68,60,.55); }
+
+/* ===== 移动端优化 ===== */
+@media (max-width: 640px) {
+  body { font-size: 14px; }
+  .app { padding: 0 10px 80px; }
+  .topbar { flex-wrap: wrap; gap: 6px 12px; padding: 12px 0; margin-bottom: 14px; }
+  .brand strong { font-size: 14px; }
+  .top-user { display: none; }
+  .hero { padding: 24px 14px 20px; border-radius: 16px; }
+  .hero h1 { font-size: 27px; }
+  .hero-sub { font-size: 13px; }
+  .panel { padding: 14px; border-radius: 12px; }
+  .section-heading h2 { font-size: 19px; }
+  .alliance-head { flex-wrap: wrap; gap: 10px; }
+  .alliance-head h2 { font-size: 20px; }
+  .tabs { gap: 0; overflow-x: auto; flex-wrap: nowrap; }
+  .tabs button { padding: 9px 11px; font-size: 13px; white-space: nowrap; }
+  .metric-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric { padding: 14px; }
+  .metric strong { font-size: 22px; }
+  .home-grid .home-form .form-fields { grid-template-columns: 1fr; }
+  .video-tools { gap: 8px; }
+  .video-tools input[type="number"] { width: 62px; }
+  .feedback-float { right: 12px; bottom: 12px; padding: 9px 13px; font-size: 13px; }
+  .feedback-panel { max-height: 92vh; }
+  .feedback-form { padding: 10px 14px; }
+  .auth-card { padding: 22px 16px; }
+  .brand-mark { width: 40px; height: 40px; flex: 0 0 40px; font-size: 20px; }
+  .modal-card { padding: 18px; }
+  .compare-select { gap: 10px; }
+}

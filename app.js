@@ -1047,16 +1047,32 @@
       e.preventDefault();
       const email = $("authEmail").value.trim();
       const pw = $("authPassword").value;
-      if (!email || !pw) return;
+      if (!email || !pw) { $("authMsg").textContent = "请输入邮箱和密码"; return; }
       if (authMode === "signup" && pw.length < 6) { $("authMsg").textContent = "密码至少 6 位"; return; }
       $("authSubmit").disabled = true;
       const res = authMode === "signup"
         ? await Store.auth.signUp(email, pw)
         : await Store.auth.signIn(email, pw);
       $("authSubmit").disabled = false;
-      if (res.error) { $("authMsg").textContent = res.error; return; }
+      if (res.error) {
+        const m = String(res.error).toLowerCase();
+        if (m.includes("already registered") || m.includes("already been registered") || m.includes("已注册")) {
+          $("authMsg").textContent = "该邮箱已注册，请直接登录（已为你切换到登录）。";
+          authMode = "login";
+          $("tabLogin").classList.add("active");
+          $("tabSignup").classList.remove("active");
+          $("authSubmit").textContent = "登录";
+        } else if (m.includes("email not confirmed") || m.includes("not confirmed")) {
+          $("authMsg").textContent = "该邮箱尚未完成验证，请先到邮箱点击确认链接后再登录。";
+        } else if (m.includes("invalid login credentials") || m.includes("invalid_credentials")) {
+          $("authMsg").textContent = "邮箱或密码错误，请重试。";
+        } else {
+          $("authMsg").textContent = res.error;
+        }
+        return;
+      }
       if (res.user) { enterApp(res.user); }
-      else { $("authMsg").textContent = "注册成功。请到邮箱完成验证后登录（或在 Supabase 关闭邮箱验证）。"; }
+      else { $("authMsg").textContent = "注册成功，已自动登录。"; }
     });
     $("authLocalDemo").onclick = async () => { const u = await Store.auth.getUser(); if (u) enterApp(u); };
 
