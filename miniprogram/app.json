@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/home/home",
+    "pages/alliance/alliance"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#1d0b0f",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "率土同盟数据库",
+    "backgroundColor": "#1d0b0f",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,11 @@
+page { background: #1d0b0f; color: #f8eee9; font-size: 28rpx; }
+.btn { background: linear-gradient(135deg, #e0443c, #ff6b5e); color: #fff; border-radius: 40rpx; font-size: 30rpx; font-weight: 600; }
+.btn::after { border: none; }
+.btn-ghost { background: #39171e; color: #f8eee9; border: 1rpx solid #52242b; border-radius: 40rpx; font-size: 30rpx; }
+.btn-ghost::after { border: none; }
+.card { background: #2d1218; border: 1rpx solid #52242b; border-radius: 24rpx; padding: 28rpx; }
+.input { background: #0f141c; border: 1rpx solid #52242b; border-radius: 14rpx; padding: 20rpx; color: #f8eee9; margin-bottom: 20rpx; }
+.muted { color: #c49da1; font-size: 24rpx; }
+.h3 { font-size: 32rpx; font-weight: 700; }
+.row { display: flex; align-items: center; gap: 16rpx; }
+.grow { flex: 1; }

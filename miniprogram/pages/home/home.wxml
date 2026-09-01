@@ -1,0 +1,24 @@
+<view style="padding:24rpx;">
+  <view style="display:flex;gap:16rpx;margin-bottom:24rpx;"><button class="btn grow" bindtap="openCreate">创建同盟</button><button class="btn-ghost grow" bindtap="openJoin">加入同盟</button></view>
+  <view class="muted" style="margin-bottom:16rpx;">已加入 {{alliances.length}} 个同盟</view>
+  <view wx:for="{{alliances}}" wx:key="id" class="card" style="margin-bottom:20rpx;" bindtap="openAlliance" data-i="{{index}}">
+    <view class="row"><view class="h3 grow">{{item.name}}</view><view class="muted">{{item.role==='owner'?'盟主':(item.role==='admin'?'管理':'成员')}}</view></view>
+    <view class="muted">{{item.season}}</view><view class="muted">邀请码：{{item.invite_code}}</view>
+  </view>
+  <view wx:if="{{alliances.length===0}}" class="muted" style="text-align:center;padding:40rpx;">还没有同盟，先创建或加入一个吧</view>
+  <button class="btn-ghost" style="margin-top:30rpx;" bindtap="logout">退出登录</button>
+</view>
+<view wx:if="{{show}}" class="mask" bindtap="close"><view class="sheet" catchtap="">
+  <view class="h3" style="margin-bottom:20rpx;">{{show==='create'?'创建同盟':'加入同盟'}}</view>
+  <block wx:if="{{show==='create'}}">
+    <input class="input" placeholder="同盟名称 *" value="{{name}}" bindinput="onName" />
+    <input class="input" placeholder="赛季名称" value="{{season}}" bindinput="onSeason" />
+    <input class="input" placeholder="你的游戏昵称" value="{{gameName}}" bindinput="onGameName" />
+    <button class="btn" loading="{{loading}}" bindtap="doCreate">创建</button>
+  </block>
+  <block wx:if="{{show==='join'}}">
+    <input class="input" placeholder="邀请码 *" value="{{code}}" bindinput="onCode" />
+    <input class="input" placeholder="你的游戏昵称" value="{{gameName}}" bindinput="onGameName" />
+    <button class="btn" loading="{{loading}}" bindtap="doJoin">加入</button>
+  </block>
+</view></view>

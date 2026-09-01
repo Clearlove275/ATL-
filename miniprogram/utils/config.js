@@ -1,0 +1,1 @@
+module.exports = { supabaseUrl: "https://uqxjimxhtvjqpkmeqbnn.supabase.co", anonKey: "sb_publishable_e9KyKQVfc_12_FpFgO_PPg_pfY4JWSa", visionBackendUrl: "https://uqxjimxhtvjqpkmeqbnn.supabase.co/functions/v1/vision-ocr" };
