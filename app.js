@@ -285,18 +285,26 @@
     return null;
   }
 
+  function canManagePlayers() {
+    return S.myRole === "owner" || S.myRole === "admin";
+  }
+
   /* ---------- 导入数据 ---------- */
   function renderImport() {
     const sel = $("recordPlayer");
     const myId = myUserId();
     const myPlayer = myId ? S.players.find((p) => p.user_id === myId) : null;
+    const can = canManagePlayers();
+    const options = can ? S.players : (myPlayer ? [myPlayer] : []);
     const prev = S.preselectPlayer || (myPlayer && myPlayer.id) || sel.value;
-    sel.innerHTML = '<option value="">请选择玩家</option>' + S.players.map((p) =>
+    sel.innerHTML = '<option value="">请选择玩家</option>' + options.map((p) =>
       '<option value="' + p.id + '">' + safe(p.game_name) + '</option>'
     ).join("");
-    if (prev) sel.value = prev;
+    if (prev && options.some((p) => p.id === prev)) sel.value = prev;
     if (!S.preselectPlayer) S.preselectPlayer = null;
     if (!$("recordTime").value) $("recordTime").value = nowLocalInput();
+    const note = $("importRoleNote");
+    if (note) note.textContent = can ? "你是盟主 / 管理，可录入任意成员的武勋、势力值与贡献数据。" : "你只能录入自己的数据（已自动选中你的角色）。";
   }
 
   /* ---------- 成员数据（排序 + 变化值） ---------- */
@@ -345,6 +353,9 @@
       '<td>' +
         '<button class="link-button" data-addrec="' + a.p.id + '">录入</button>' +
         '<button class="link-button" data-editp="' + a.p.id + '">编辑</button>' +
+        (canManagePlayers()
+          ? '<button class="link-button" data-merge="' + a.p.id + '">合并</button>'
+          : (a.p.user_id === myUserId() ? '<button class="link-button" data-merge="' + a.p.id + '">继承旧数据</button>' : '')) +
         '<button class="link-button danger" data-delp="' + a.p.id + '">删除</button>' +
       '</td>' +
       '</tr>'
@@ -612,6 +623,36 @@
     $("deleteAllianceBtn").style.display = S.myRole === "owner" ? "" : "none";
   }
 
+  /* ---------- 合并玩家数据（改名继承） ---------- */
+  function openMergeModal(targetId) {
+    const target = S.players.find((p) => p.id === targetId);
+    if (!target) return;
+    const can = canManagePlayers();
+    const myId = myUserId();
+    const sources = S.players.filter((p) => p.id !== targetId && (can || p.user_id === myId || !p.user_id));
+    if (!sources.length) { toast("没有可合并的数据来源"); return; }
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML =
+      '<div class="modal-card"><h3>合并玩家数据</h3>' +
+      '<p class="muted">把下面玩家的全部记录合并到 <b>' + safe(target.game_name) + '</b>，合并后该来源玩家会被移除。</p>' +
+      '<label>数据来源<select id="mergeFrom">' + sources.map((p) => '<option value="' + p.id + '">' + safe(p.game_name) + (p.user_id ? '' : '（未认领）') + '</option>').join("") + '</select></label>' +
+      '<div class="modal-actions"><button type="button" class="ghost" id="mergeCancel">取消</button>' +
+      '<button type="button" class="primary" id="mergeOk">合并</button></div></div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector("#mergeCancel").onclick = () => overlay.remove();
+    overlay.querySelector("#mergeOk").onclick = async () => {
+      const from = overlay.querySelector("#mergeFrom").value;
+      if (!from) return;
+      try {
+        await Store.players.merge(S.active.id, from, targetId);
+        overlay.remove();
+        toast("已合并数据");
+        loadAllianceData();
+      } catch (e) { toast("合并失败：" + e.message); }
+    };
+  }
+
   /* ---------- 玩家新增 / 编辑弹窗 ---------- */
   function openPlayerModal(player) {
     const overlay = document.createElement("div");
@@ -862,6 +903,7 @@
 
   async function batchSave() {
     if (!S.active) return;
+    if (!canManagePlayers()) { toast("只有盟主或管理员可以批量导入他人数据"); return; }
     const inputs = document.querySelectorAll("#batchBody input[data-batch]");
     const rows = batchRows.map(() => ({ name: "", merit: 0, power: 0, contributionTotal: 0, contributionWeek: 0 }));
     inputs.forEach((inp) => {
@@ -1087,11 +1129,12 @@
 
     // 动态点击委托
     document.addEventListener("click", async (e) => {
-      const t = e.target.closest("[data-aid],[data-addrec],[data-editp],[data-delp],[data-delrec],[data-removemember],[data-batchremove]");
+      const t = e.target.closest("[data-aid],[data-addrec],[data-editp],[data-delp],[data-delrec],[data-removemember],[data-batchremove],[data-merge]");
       if (!t) return;
       if (t.hasAttribute("data-aid")) { openAlliance(t.dataset.aid); return; }
       if (t.hasAttribute("data-addrec")) { S.preselectPlayer = t.dataset.addrec; $("recordSource").value = "manual"; showTab("import"); renderImport(); toast("请填写该玩家的武勋 / 势力值并保存"); return; }
       if (t.hasAttribute("data-editp")) { const p = S.players.find((x) => x.id === t.dataset.editp); if (p) openPlayerModal(p); return; }
+      if (t.hasAttribute("data-merge")) { openMergeModal(t.dataset.merge); return; }
       if (t.hasAttribute("data-delp")) {
         const p = S.players.find((x) => x.id === t.dataset.delp);
         if (p && confirm("删除玩家「" + p.game_name + "」及其全部记录？")) {

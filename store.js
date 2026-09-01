@@ -11,6 +11,10 @@
     return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
   }
   function nowIso() { return new Date().toISOString(); }
+  function sameLocalDay(a, b) {
+    const x = new Date(a), y = new Date(b);
+    return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate();
+  }
 
   /* ================= 本地模式 ================= */
   function LocalStore() {
@@ -154,19 +158,40 @@
         state.players = state.players.filter((p) => !(p.id === pid && p.alliance_id === aid));
         state.records = state.records.filter((r) => !(r.player_id === pid && r.alliance_id === aid));
         save();
+      },
+      async merge(aid, fromId, toId) {
+        if (fromId === toId) return;
+        state.records.forEach((x) => { if (x.alliance_id === aid && x.player_id === fromId) x.player_id = toId; });
+        state.players = state.players.filter((p) => !(p.id === fromId && p.alliance_id === aid));
+        save();
       }
     };
 
     this.records = {
       async list(aid) { return state.records.filter((r) => r.alliance_id === aid); },
       async add(aid, r) {
+        const recorded_at = r.recorded_at || nowIso();
+        const target = new Date(recorded_at);
+        const existing = state.records.find((x) => x.alliance_id === aid && x.player_id === r.player_id && sameLocalDay(x.recorded_at, target));
+        if (existing) {
+          existing.merit = Number(r.merit) || 0;
+          existing.power = Number(r.power) || 0;
+          existing.contribution_total = Number(r.contribution_total) || 0;
+          existing.contribution_week = Number(r.contribution_week) || 0;
+          if (r.source) existing.source = r.source;
+          if (r.note != null) existing.note = r.note;
+          existing.recorded_at = recorded_at;
+          existing.created_by = LOCAL_USER.id;
+          save();
+          return existing;
+        }
         const row = {
           id: uid(), alliance_id: aid, player_id: r.player_id,
           merit: Number(r.merit) || 0, power: Number(r.power) || 0,
           contribution_total: Number(r.contribution_total) || 0,
           contribution_week: Number(r.contribution_week) || 0,
           source: r.source || "manual", note: r.note || "",
-          recorded_at: r.recorded_at || nowIso(), created_by: LOCAL_USER.id, created_at: nowIso()
+          recorded_at, created_by: LOCAL_USER.id, created_at: nowIso()
         };
         state.records.push(row); save();
         return row;
@@ -317,6 +342,14 @@
         const { error } = await sb.from("players").delete().eq("id", pid).eq("alliance_id", aid);
         if (error) throw new Error(error.message);
         return true;
+      },
+      async merge(aid, fromId, toId) {
+        if (fromId === toId) return;
+        const { error: e1 } = await sb.from("records").update({ player_id: toId }).eq("player_id", fromId).eq("alliance_id", aid);
+        if (e1) throw new Error(e1.message);
+        const { error: e2 } = await sb.from("players").delete().eq("id", fromId).eq("alliance_id", aid);
+        if (e2) throw new Error(e2.message);
+        return true;
       }
     };
 
@@ -328,14 +361,24 @@
       },
       async add(aid, r) {
         const u = await uidOf();
-        const { data, error } = await sb.from("records").insert({
-          alliance_id: aid, player_id: r.player_id,
+        const recorded_at = r.recorded_at || nowIso();
+        const target = new Date(recorded_at);
+        const payload = {
           merit: Number(r.merit) || 0, power: Number(r.power) || 0,
           contribution_total: Number(r.contribution_total) || 0,
           contribution_week: Number(r.contribution_week) || 0,
           source: r.source || "manual", note: r.note || "",
-          recorded_at: r.recorded_at || nowIso(), created_by: u
-        }).select().single();
+          recorded_at, created_by: u
+        };
+        const { data: existing, error: e0 } = await sb.from("records").select("id, recorded_at").eq("alliance_id", aid).eq("player_id", r.player_id);
+        if (e0) throw new Error(e0.message);
+        const same = (existing || []).find((x) => sameLocalDay(x.recorded_at, target));
+        if (same) {
+          const { data, error } = await sb.from("records").update(payload).eq("id", same.id).select().single();
+          if (error) throw new Error(error.message);
+          return data;
+        }
+        const { data, error } = await sb.from("records").insert({ alliance_id: aid, player_id: r.player_id, ...payload }).select().single();
         if (error) throw new Error(error.message);
         return data;
       },
