@@ -386,10 +386,28 @@
   }
 
   /* ---------- 变化值对比 ---------- */
+  function renderCompareAll() {
+    $("compareStart").innerHTML = "";
+    $("compareEnd").innerHTML = "";
+    $("compareCount").textContent = "";
+    $("compareRecords").innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">已选择「全选」，下方为全体成员赛季总变化值（最新 − 最早）。</td></tr>';
+    const rows = S.players.map((p) => {
+      const recs = recordsOf(p.id);
+      if (!recs.length) return { name: p.game_name, dMerit: 0, dPower: 0, dCt: 0, dCw: 0 };
+      const f = recs[0], l = recs[recs.length - 1];
+      return { name: p.game_name, dMerit: Number(l.merit) - Number(f.merit), dPower: Number(l.power) - Number(f.power), dCt: Number(l.contribution_total) - Number(f.contribution_total), dCw: Number(l.contribution_week) - Number(f.contribution_week) };
+    }).sort((a, b) => b.dMerit - a.dMerit);
+    const box = $("compareResult");
+    if (!rows.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; return; }
+    box.innerHTML = '<div class="table-wrap"><table><thead><tr><th>排名</th><th>玩家</th><th>Δ武勋</th><th>Δ势力</th><th>Δ总贡献</th><th>Δ周贡献</th></tr></thead><tbody>' +
+      rows.map((a, i) => '<tr><td>' + (i + 1) + '</td><td>' + safe(a.name) + '</td><td class="' + deltaClass(a.dMerit) + '">' + signed(a.dMerit) + '</td><td class="' + deltaClass(a.dPower) + '">' + signed(a.dPower) + '</td><td class="' + deltaClass(a.dCt) + '">' + signed(a.dCt) + '</td><td class="' + deltaClass(a.dCw) + '">' + signed(a.dCw) + '</td></tr>').join("") +
+      '</tbody></table></div>';
+  }
+
   function renderCompare() {
     const sel = $("comparePlayer");
     const prevId = sel.value;
-    sel.innerHTML = '<option value="">请选择玩家</option>' + S.players.map((p) =>
+    sel.innerHTML = '<option value="">请选择玩家</option><option value="all">全选（全部成员）</option>' + S.players.map((p) =>
       '<option value="' + p.id + '">' + safe(p.game_name) + '</option>'
     ).join("");
     if (prevId && S.players.some((p) => p.id === prevId)) sel.value = prevId;
@@ -397,6 +415,7 @@
   }
 
   function renderCompareDetail(pid) {
+    if (pid === "all") { renderCompareAll(); return; }
     const startSel = $("compareStart"), endSel = $("compareEnd");
     const records = pid ? recordsOf(pid) : [];
     const opt = (r) => '<option value="' + r.id + '">' + fmtTime(r.recorded_at) + ' · 武勋 ' + fmt(r.merit) + ' · 势力 ' + fmt(r.power) + ' · 贡献 ' + fmt(r.contribution_total) + '</option>';
@@ -433,6 +452,7 @@
   /* ---------- 变化值结果（供下拉变化事件调用，避免重建选项） ---------- */
   function updateCompareResult() {
     const pid = $("comparePlayer").value;
+    if (pid === "all") { renderCompareAll(); return; }
     const records = pid ? recordsOf(pid) : [];
     const s = records.find((r) => r.id === $("compareStart").value);
     const e = records.find((r) => r.id === $("compareEnd").value);
@@ -1087,6 +1107,8 @@
       if (res.user) { enterApp(res.user); }
       else { $("authMsg").textContent = "注册成功，已自动登录。"; }
     });
+    $("qqLogin").onclick = () => toast("QQ 登录需要接入 QQ 互联（提供 AppID / AppKey）后才能使用");
+    $("wechatLogin").onclick = () => toast("微信登录需要接入微信开放平台（提供 AppID / AppSecret）后才能使用");
     $("authLocalDemo").onclick = async () => { const u = await Store.auth.getUser(); if (u) enterApp(u); };
 
     // 顶栏

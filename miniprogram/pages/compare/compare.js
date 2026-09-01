@@ -1,25 +1,36 @@
 const store = require('../../utils/store');
+const sign = n => (n > 0 ? '+' : '') + n;
 Page({
-  data: { aid:'', players:[], records:[], selPid:'', recs:[], recOptions:[], startIdx:-1, endIdx:-1, result:null },
+  data: { aid:'', players:[], records:[], playerOptions:['全选（全部成员）'], mode:'single', selPid:'', recs:[], recOptions:[], startIdx:-1, endIdx:-1, result:null, allList:[] },
   onLoad(o){ this.setData({ aid:o.id }); this.load(); },
-  async load(){ const [players, records] = await Promise.all([store.players.list(this.data.aid), store.records.list(this.data.aid)]); this.setData({ players, records }); },
+  async load(){
+    const [players, records] = await Promise.all([store.players.list(this.data.aid), store.records.list(this.data.aid)]);
+    this.setData({ players, records, playerOptions: ['全选（全部成员）'].concat((players||[]).map(p => p.game_name)) });
+  },
   pickPlayer(e){
-    const i=e.detail.value, p=this.data.players[i];
-    const recs = this.data.records.filter(r=>r.player_id===p.id).sort((a,b)=>new Date(a.recorded_at)-new Date(b.recorded_at));
+    const i = Number(e.detail.value);
+    if (i === 0) { this.computeAll(); return; }
+    const p = this.data.players[i - 1];
+    const recs = this.data.records.filter(r => r.player_id === p.id).sort((a,b) => new Date(a.recorded_at) - new Date(b.recorded_at));
     const opts = recs.map(r => (new Date(r.recorded_at).toLocaleString()) + ' 武' + r.merit);
-    this.setData({ selPid:p.id, recs, recOptions:opts, startIdx:0, endIdx:recs.length?recs.length-1:-1, result:null });
+    this.setData({ mode:'single', selPid:p.id, recs, recOptions:opts, startIdx:0, endIdx:recs.length?recs.length-1:-1, result:null });
+  },
+  computeAll(){
+    const byP = {}; (this.data.records||[]).forEach(r => { (byP[r.player_id] = byP[r.player_id] || []).push(r); });
+    const list = (this.data.players||[]).map(p => {
+      const rs = (byP[p.id]||[]).sort((a,b) => new Date(a.recorded_at) - new Date(b.recorded_at));
+      if (!rs.length) return { name:p.game_name, dMerit:'0', dPower:'0', dCt:'0', dCw:'0' };
+      const f = rs[0], l = rs[rs.length-1];
+      return { name:p.game_name, dMerit:sign(l.merit-f.merit), dPower:sign(l.power-f.power), dCt:sign(l.contribution_total-f.contribution_total), dCw:sign(l.contribution_week-f.contribution_week) };
+    }).sort((a,b) => (parseInt(b.dMerit)||0) - (parseInt(a.dMerit)||0));
+    this.setData({ mode:'all', allList:list });
   },
   pickStart(e){ this.setData({ startIdx:Number(e.detail.value) }); },
   pickEnd(e){ this.setData({ endIdx:Number(e.detail.value) }); },
   calc(){
     const { recs, startIdx, endIdx } = this.data;
     if (startIdx < 0 || endIdx < 0 || startIdx === endIdx) { this.setData({ result:null }); return; }
-    const s=recs[startIdx], e=recs[endIdx];
-    const sign = n => (n>0?'+':'')+n;
-    this.setData({ result:{
-      dMerit: sign(e.merit-s.merit), dPower: sign(e.power-s.power),
-      dCt: sign(e.contribution_total-s.contribution_total), dCw: sign(e.contribution_week-s.contribution_week),
-      start: recOptions[startIdx], end: recOptions[endIdx]
-    }});
+    const s = recs[startIdx], e = recs[endIdx];
+    this.setData({ result:{ dMerit:sign(e.merit-s.merit), dPower:sign(e.power-s.power), dCt:sign(e.contribution_total-s.contribution_total), dCw:sign(e.contribution_week-s.contribution_week), start:this.data.recOptions[startIdx], end:this.data.recOptions[endIdx] } });
   }
 });

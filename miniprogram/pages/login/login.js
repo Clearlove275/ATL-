@@ -22,6 +22,7 @@ Page({
   saveRemembered() {
     try { if (this.data.remember) wx.setStorageSync('atl_remembered', { email: this.data.email, password: this.data.password }); else wx.removeStorageSync('atl_remembered'); } catch (e) {}
   },
+  wechatLogin() { wx.showToast({ title: '微信一键登录需配置 AppSecret 和登录后端', icon: 'none' }); },
   forgot() {
     wx.showModal({ title: '重置密码', editable: true, placeholderText: '请输入注册邮箱', success: async res => {
       if (res.confirm && res.content) {

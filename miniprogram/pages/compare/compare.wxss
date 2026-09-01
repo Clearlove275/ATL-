@@ -1,2 +1,6 @@
 .cmp { display: flex; justify-content: space-between; padding: 14rpx 0; border-bottom: 1rpx solid rgba(82,36,43,.5); }
 .cmpv { font-weight: 800; font-size: 32rpx; }
+.arow { display: flex; align-items: center; padding: 14rpx 0; border-bottom: 1rpx solid rgba(82,36,43,.5); font-size: 26rpx; }
+.arow.th { color: #c49da1; font-weight: 600; }
+.arow .grow { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.av { width: 130rpx; text-align: center; flex-shrink: 0; }

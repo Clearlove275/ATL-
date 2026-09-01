@@ -388,3 +388,6 @@ td.num { font-variant-numeric: tabular-nums; }
 .auth-forgot { text-align: right; margin-top: 6px; }
 .auth-forgot span { color: var(--gold2); font-size: 13px; cursor: pointer; }
 .auth-forgot span:hover { text-decoration: underline; }
+
+.social-btns { display: flex; gap: 12px; }
+.social-btn { flex: 1; }

@@ -1,11 +1,18 @@
 <view style="padding:24rpx;">
   <view class="card" style="margin-bottom:20rpx;">
-    <view class="h3" style="margin-bottom:16rpx;">选择玩家</view>
-    <picker range="{{players}}" range-key="game_name" bindchange="pickPlayer"><view class="input">{{selPid ? '已选择' : '请选择玩家'}}</view></picker>
-    <view class="muted">该玩家共 {{recs.length}} 条记录</view>
+    <view class="h3" style="margin-bottom:16rpx;">选择成员</view>
+    <picker range="{{playerOptions}}" bindchange="pickPlayer"><view class="input">{{mode==='all'?'全选（全部成员）':'请选择玩家'}}</view></picker>
   </view>
-  <block wx:if="{{recs.length}}">
-    <view class="card" style="margin-bottom:20rpx;">
+  <block wx:if="{{mode==='all'}}">
+    <view class="card">
+      <view class="h3" style="margin-bottom:16rpx;">全体成员变化值（最新 − 最早）</view>
+      <view class="arow th"><view class="grow">玩家</view><view class="av">Δ武勋</view><view class="av">Δ势力</view><view class="av">Δ总贡献</view><view class="av">Δ周贡献</view></view>
+      <view class="arow" wx:for="{{allList}}" wx:key="index"><view class="grow">{{item.name}}</view><view class="av">{{item.dMerit}}</view><view class="av">{{item.dPower}}</view><view class="av">{{item.dCt}}</view><view class="av">{{item.dCw}}</view></view>
+      <view wx:if="{{allList.length===0}}" class="muted" style="text-align:center;padding:30rpx;">暂无数据</view>
+    </view>
+  </block>
+  <block wx:else>
+    <view class="card" style="margin-bottom:20rpx;" wx:if="{{recs.length}}">
       <view class="h3" style="margin-bottom:16rpx;">两次快照</view>
       <view class="muted">起始</view>
       <picker range="{{recOptions}}" bindchange="pickStart"><view class="input">{{recOptions[startIdx]}}</view></picker>
@@ -20,6 +27,6 @@
       <view class="cmp"><view>贡献总量</view><view class="cmpv">{{result.dCt}}</view></view>
       <view class="cmp"><view>贡献周量</view><view class="cmpv">{{result.dCw}}</view></view>
     </view>
+    <view wx:if="{{mode==='single' && !recs.length}}" class="muted" style="text-align:center;padding:40rpx;">该玩家还没有记录</view>
   </block>
-  <view wx:else class="muted" style="text-align:center;padding:40rpx;">该玩家还没有记录</view>
 </view>
