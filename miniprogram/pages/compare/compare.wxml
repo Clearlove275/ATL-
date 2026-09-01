@@ -1,0 +1,25 @@
+<view style="padding:24rpx;">
+  <view class="card" style="margin-bottom:20rpx;">
+    <view class="h3" style="margin-bottom:16rpx;">选择玩家</view>
+    <picker range="{{players}}" range-key="game_name" bindchange="pickPlayer"><view class="input">{{selPid ? '已选择' : '请选择玩家'}}</view></picker>
+    <view class="muted">该玩家共 {{recs.length}} 条记录</view>
+  </view>
+  <block wx:if="{{recs.length}}">
+    <view class="card" style="margin-bottom:20rpx;">
+      <view class="h3" style="margin-bottom:16rpx;">两次快照</view>
+      <view class="muted">起始</view>
+      <picker range="{{recOptions}}" bindchange="pickStart"><view class="input">{{recOptions[startIdx]}}</view></picker>
+      <view class="muted">结束</view>
+      <picker range="{{recOptions}}" bindchange="pickEnd"><view class="input">{{recOptions[endIdx]}}</view></picker>
+      <button class="btn" bindtap="calc">计算变化值</button>
+    </view>
+    <view class="card" wx:if="{{result}}">
+      <view class="h3" style="margin-bottom:16rpx;">变化值（结束 − 起始）</view>
+      <view class="cmp"><view>武勋</view><view class="cmpv">{{result.dMerit}}</view></view>
+      <view class="cmp"><view>势力值</view><view class="cmpv">{{result.dPower}}</view></view>
+      <view class="cmp"><view>贡献总量</view><view class="cmpv">{{result.dCt}}</view></view>
+      <view class="cmp"><view>贡献周量</view><view class="cmpv">{{result.dCw}}</view></view>
+    </view>
+  </block>
+  <view wx:else class="muted" style="text-align:center;padding:40rpx;">该玩家还没有记录</view>
+</view>

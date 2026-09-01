@@ -2,7 +2,9 @@
   "pages": [
     "pages/login/login",
     "pages/home/home",
-    "pages/alliance/alliance"
+    "pages/alliance/alliance",
+    "pages/compare/compare",
+    "pages/charts/charts"
   ],
   "window": {
     "navigationBarBackgroundColor": "#1d0b0f",
