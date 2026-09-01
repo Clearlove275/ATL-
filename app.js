@@ -980,11 +980,6 @@
     $("refreshBtn").onclick = () => { loadAllianceData(); };
     $("settingsBtn").onclick = () => { showTab("settings"); renderSettings(); };
 
-    // 首页英雄按钮：平滑滚动到对应表单
-    document.querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", () => {
-      const el = document.querySelector(b.dataset.goto);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }));
     document.querySelectorAll("#allianceTabs button").forEach((b) =>
       b.addEventListener("click", () => { showTab(b.dataset.view); renderActive(); })
     );
