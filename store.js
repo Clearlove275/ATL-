@@ -23,7 +23,7 @@
     const subs = {};
 
     function defaultState() {
-      return { alliances: [], members: [], players: [], records: [] };
+      return { alliances: [], members: [], players: [], records: [], feedback: [] };
     }
     function load() {
       try {
@@ -199,6 +199,17 @@
       async remove(aid, rid) {
         state.records = state.records.filter((r) => !(r.id === rid && r.alliance_id === aid));
         save();
+      }
+    };
+
+    this.feedback = {
+      async list() { return (state.feedback || []).slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); },
+      async add(p) {
+        const row = { id: uid(), nickname: (p.nickname || "匿名玩家").trim() || "匿名玩家", content: (p.content || "").trim(), parent_id: p.parent_id || null, created_at: nowIso() };
+        state.feedback = state.feedback || [];
+        state.feedback.push(row);
+        save();
+        return row;
       }
     };
 
@@ -383,6 +394,23 @@
         const { error } = await sb.from("records").delete().eq("id", rid).eq("alliance_id", aid);
         if (error) throw new Error(error.message);
         return true;
+      }
+    };
+
+    this.feedback = {
+      async list() {
+        const { data, error } = await sb.from("feedback").select("*").order("created_at", { ascending: true });
+        if (error) throw new Error(error.message);
+        return data || [];
+      },
+      async add(p) {
+        const { data, error } = await sb.from("feedback").insert({
+          nickname: (p.nickname || "匿名玩家").trim() || "匿名玩家",
+          content: (p.content || "").trim(),
+          parent_id: p.parent_id || null
+        }).select().single();
+        if (error) throw new Error(error.message);
+        return data;
       }
     };
 

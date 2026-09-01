@@ -1120,6 +1120,10 @@
     $("runVideoOcr").onclick = runVideoOcr;
     $("chooseSheet").onclick = () => $("sheetInput").click();
     $("sheetInput").onchange = (e) => importSheet(e.target.files[0]);
+    $("openFeedback").onclick = openFeedback;
+    $("closeFeedback").onclick = closeFeedback;
+    $("fbSubmit").onclick = submitFeedback;
+    $("feedbackOverlay").addEventListener("click", (e) => { if (e.target === $("feedbackOverlay")) closeFeedback(); });
 
     // 成员数据
     $("addPlayerBtn").onclick = () => openPlayerModal(null);
@@ -1194,12 +1198,13 @@
 
     // 动态点击委托
     document.addEventListener("click", async (e) => {
-      const t = e.target.closest("[data-aid],[data-addrec],[data-editp],[data-delp],[data-delrec],[data-removemember],[data-batchremove],[data-merge]");
+      const t = e.target.closest("[data-aid],[data-addrec],[data-editp],[data-delp],[data-delrec],[data-removemember],[data-batchremove],[data-merge],[data-reply]");
       if (!t) return;
       if (t.hasAttribute("data-aid")) { openAlliance(t.dataset.aid); return; }
       if (t.hasAttribute("data-addrec")) { S.preselectPlayer = t.dataset.addrec; $("recordSource").value = "manual"; showTab("import"); renderImport(); toast("请填写该玩家的武勋 / 势力值并保存"); return; }
       if (t.hasAttribute("data-editp")) { const p = S.players.find((x) => x.id === t.dataset.editp); if (p) openPlayerModal(p); return; }
       if (t.hasAttribute("data-merge")) { openMergeModal(t.dataset.merge); return; }
+      if (t.hasAttribute("data-reply")) { replyToId = t.dataset.reply; $("fbReplyHint").textContent = "正在回复，发布后将显示在该评论下方。"; $("fbReplyHint").classList.remove("hidden"); $("fbContent").focus(); return; }
       if (t.hasAttribute("data-delp")) {
         const p = S.players.find((x) => x.id === t.dataset.delp);
         if (p && confirm("删除玩家「" + p.game_name + "」及其全部记录？")) {
@@ -1233,6 +1238,78 @@
         loadAllianceData();
       }
     });
+  }
+
+  /* ---------- 反馈区 ---------- */
+  let replyToId = null;
+  function timeAgo(iso) {
+    if (!iso) return "";
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "刚刚";
+    if (m < 60) return m + " 分钟前";
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + " 小时前";
+    const d = Math.floor(h / 24);
+    if (d < 30) return d + " 天前";
+    return fmtTime(iso);
+  }
+  function renderFeedback(list) {
+    const posts = list.filter((f) => !f.parent_id).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const replies = list.filter((f) => f.parent_id);
+    const box = $("feedbackList");
+    if (!posts.length) {
+      box.innerHTML = '<div class="muted" style="text-align:center;padding:28px">还没有反馈，来抢沙发吧～</div>';
+      return;
+    }
+    box.innerHTML = posts.map((p) => {
+      const rs = replies.filter((r) => r.parent_id === p.id).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      return '<div class="fb-post">' +
+        '<div class="fb-avatar">' + safe(String(p.nickname || "匿").charAt(0)) + '</div>' +
+        '<div class="fb-body">' +
+          '<div class="fb-meta"><span class="fb-name">' + safe(p.nickname) + '</span><span class="fb-time">' + timeAgo(p.created_at) + '</span></div>' +
+          '<div class="fb-content">' + safe(p.content).replace(/\n/g, "<br>") + '</div>' +
+          '<div class="fb-actions"><button class="link-button" data-reply="' + p.id + '">回复</button></div>' +
+          (rs.length ? '<div class="fb-replies">' + rs.map((r) =>
+            '<div class="fb-reply"><span class="fb-name">' + safe(r.nickname) + '</span>：<span>' + safe(r.content).replace(/\n/g, "<br>") + '</span><span class="fb-time">' + timeAgo(r.created_at) + '</span></div>'
+          ).join("") + '</div>' : '') +
+        '</div></div>';
+    }).join("");
+  }
+  async function openFeedback() {
+    show($("feedbackOverlay"));
+    $("feedbackList").innerHTML = '<div class="muted" style="text-align:center;padding:24px">加载中…</div>';
+    try {
+      const list = await Store.feedback.list();
+      renderFeedback(list);
+    } catch (e) {
+      $("feedbackList").innerHTML = '<div class="muted" style="text-align:center;padding:24px">加载失败：' + safe(e.message) + '</div>';
+    }
+  }
+  function closeFeedback() {
+    hide($("feedbackOverlay"));
+    replyToId = null;
+    $("fbReplyHint").classList.add("hidden");
+  }
+  async function submitFeedback() {
+    const content = $("fbContent").value.trim();
+    if (!content) { toast("请先写下反馈内容"); return; }
+    const nickname = $("fbNickname").value.trim() || "匿名玩家";
+    const btn = $("fbSubmit");
+    btn.disabled = true;
+    try {
+      await Store.feedback.add({ nickname, content, parent_id: replyToId || null });
+      $("fbContent").value = "";
+      replyToId = null;
+      $("fbReplyHint").classList.add("hidden");
+      toast("反馈已提交，感谢！");
+      const list = await Store.feedback.list();
+      renderFeedback(list);
+    } catch (e) {
+      toast("提交失败：" + e.message);
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   /* ---------- 初始化 ---------- */

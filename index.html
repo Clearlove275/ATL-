@@ -171,6 +171,9 @@
             <p class="eyebrow">STRATEGY · ALLIANCE · DATA</p>
             <h1>率土同盟数据库</h1>
             <p class="hero-sub">截图识别自动录入 · 同盟数据实时更新 · 武勋 / 势力 / 贡献排行与变化值对比</p>
+            <div class="hero-feedback">
+              <button id="openFeedback" class="ghost">💬 反馈区 · 提交意见</button>
+            </div>
           </div>
         </section>
 
@@ -429,7 +432,25 @@
     </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- 反馈区弹窗 -->
+  <div id="feedbackOverlay" class="feedback-overlay hidden">
+    <div class="feedback-panel">
+      <div class="feedback-head">
+        <div><p class="eyebrow">FEEDBACK</p><h3>反馈区</h3></div>
+        <button id="closeFeedback" class="ghost small">关闭</button>
+      </div>
+      <div class="feedback-list" id="feedbackList"><div class="muted" style="text-align:center;padding:24px">加载中…</div></div>
+      <div class="feedback-form">
+        <div class="feedback-form-row">
+          <input id="fbNickname" placeholder="昵称（默认：匿名玩家）" maxlength="20" />
+          <button id="fbSubmit" class="primary">发布</button>
+        </div>
+        <textarea id="fbContent" placeholder="写下你的建议或反馈，让我们一起优化网站…" rows="2" maxlength="500"></textarea>
+        <div id="fbReplyHint" class="muted hidden"></div>
+      </div>
+    </div>
+  </div>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
