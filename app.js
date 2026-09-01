@@ -387,15 +387,23 @@
 
   /* ---------- 变化值对比 ---------- */
   function renderCompareAll() {
-    $("compareStart").innerHTML = "";
-    $("compareEnd").innerHTML = "";
+    hide($("compareSnapshots"));
+    show($("compareRange"));
     $("compareCount").textContent = "";
-    $("compareRecords").innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">已选择「全选」，下方为全体成员赛季总变化值（最新 − 最早）。</td></tr>';
+    $("compareRecords").innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">已选择「全选」，请在下方选择时间范围查看全体成员变化值。</td></tr>';
+    if (!$("compareRangeStart").value && S.records.length) {
+      const times = S.records.map((r) => new Date(r.recorded_at).getTime());
+      $("compareRangeStart").value = toLocalInput(Math.min.apply(null, times));
+      $("compareRangeEnd").value = toLocalInput(Math.max.apply(null, times));
+    }
+    const startMs = $("compareRangeStart").value ? new Date($("compareRangeStart").value).getTime() : null;
+    const endMs = $("compareRangeEnd").value ? new Date($("compareRangeEnd").value).getTime() : null;
     const rows = S.players.map((p) => {
       const recs = recordsOf(p.id);
       if (!recs.length) return { name: p.game_name, dMerit: 0, dPower: 0, dCt: 0, dCw: 0 };
-      const f = recs[0], l = recs[recs.length - 1];
-      return { name: p.game_name, dMerit: Number(l.merit) - Number(f.merit), dPower: Number(l.power) - Number(f.power), dCt: Number(l.contribution_total) - Number(f.contribution_total), dCw: Number(l.contribution_week) - Number(f.contribution_week) };
+      const sv = startMs ? valueAt(recs, startMs) : recs[0];
+      const ev = endMs ? valueAt(recs, endMs) : recs[recs.length - 1];
+      return { name: p.game_name, dMerit: Number(ev.merit) - Number(sv.merit), dPower: Number(ev.power) - Number(sv.power), dCt: Number(ev.contribution_total) - Number(sv.contribution_total), dCw: Number(ev.contribution_week) - Number(sv.contribution_week) };
     }).sort((a, b) => b.dMerit - a.dMerit);
     const box = $("compareResult");
     if (!rows.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; return; }
@@ -416,6 +424,8 @@
 
   function renderCompareDetail(pid) {
     if (pid === "all") { renderCompareAll(); return; }
+    show($("compareSnapshots"));
+    hide($("compareRange"));
     const startSel = $("compareStart"), endSel = $("compareEnd");
     const records = pid ? recordsOf(pid) : [];
     const opt = (r) => '<option value="' + r.id + '">' + fmtTime(r.recorded_at) + ' · 武勋 ' + fmt(r.merit) + ' · 势力 ' + fmt(r.power) + ' · 贡献 ' + fmt(r.contribution_total) + '</option>';
@@ -1203,6 +1213,8 @@
     $("comparePlayer").addEventListener("change", (e) => renderCompareDetail(e.target.value));
     $("compareStart").addEventListener("change", updateCompareResult);
     $("compareEnd").addEventListener("change", updateCompareResult);
+    $("compareRangeStart").addEventListener("change", renderCompareAll);
+    $("compareRangeEnd").addEventListener("change", renderCompareAll);
 
     // 图表与导出
     $("chartMetric").addEventListener("change", renderCharts);

@@ -380,9 +380,16 @@
           <section class="panel">
             <div class="compare-select">
               <label>选择玩家<select id="comparePlayer"></select></label>
-              <label>起始快照<select id="compareStart"></select></label>
-              <span class="muted">→</span>
-              <label>结束快照<select id="compareEnd"></select></label>
+              <div id="compareSnapshots" class="compare-select">
+                <label>起始快照<select id="compareStart"></select></label>
+                <span class="muted">→</span>
+                <label>结束快照<select id="compareEnd"></select></label>
+              </div>
+              <div id="compareRange" class="compare-select hidden">
+                <label>起始时间<input id="compareRangeStart" type="datetime-local" /></label>
+                <span class="muted">→</span>
+                <label>结束时间<input id="compareRangeEnd" type="datetime-local" /></label>
+              </div>
             </div>
             <div id="compareResult" class="compare-result"></div>
           </section>
