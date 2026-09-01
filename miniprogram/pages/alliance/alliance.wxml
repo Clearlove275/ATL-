@@ -12,14 +12,32 @@
       <view class="gcell"><view class="num num-accent">{{stats.topPower||0}}</view><view class="muted">最高势力</view></view>
     </view>
   </view>
-  <view class="row" style="margin-bottom:16rpx;"><button class="btn grow" bindtap="chooseImage">📷 截图识别</button><button class="btn-ghost grow" bindtap="chooseVideo">🎬 视频</button></view>
+  <view class="row" style="margin-bottom:16rpx;"><button class="btn grow" bindtap="chooseImage">📷 截图识别</button><button class="btn-ghost grow" bindtap="chooseVideo">🎬 视频识别</button></view>
   <view class="row" style="margin-bottom:16rpx;"><button class="btn-ghost grow" bindtap="chooseCsv">📄 CSV 导入</button><button class="btn-ghost grow" bindtap="openAddPlayer">＋ 添加玩家</button></view>
-  <view class="row" style="margin-bottom:16rpx;"><button class="btn-ghost grow" bindtap="goCompare">变化值对比</button><button class="btn-ghost grow" bindtap="goCharts">数据图表</button><button class="btn-ghost grow" bindtap="goSettings">同盟设置</button></view>
+  <view class="row" style="margin-bottom:16rpx;"><button class="btn-ghost grow nav-btn" bindtap="goCompare">变化值对比</button><button class="btn-ghost grow nav-btn" bindtap="goCharts">数据图表</button><button class="btn-ghost grow nav-btn" bindtap="goSettings">同盟设置</button></view>
   <view class="h3" style="margin:10rpx 0 16rpx;">成员数据</view>
-  <view wx:for="{{players}}" wx:key="id" class="card" style="margin-bottom:16rpx;">
-    <view class="row"><view class="h3 grow">{{item.game_name}}</view><button class="btn-ghost" style="font-size:26rpx;margin:0;" size="mini" bindtap="addRecord" data-i="{{index}}">录入</button></view>
-    <view class="muted" style="margin-top:8rpx;">武勋 {{item.merit}} · 势力 {{item.power}} · 贡献 {{item.ct}}/{{item.cw}} · {{item.count}}条</view>
-  </view>
+  <scroll-view scroll-x class="table-scroll">
+    <view class="table">
+      <view class="tr th">
+        <view class="td w-rank">排名</view>
+        <view class="td w-name">玩家名称</view>
+        <view class="td w-num">武勋</view>
+        <view class="td w-num">势力值</view>
+        <view class="td w-num">贡献总量</view>
+        <view class="td w-num">贡献周量</view>
+        <view class="td w-op">操作</view>
+      </view>
+      <view class="tr" wx:for="{{players}}" wx:key="id">
+        <view class="td w-rank">{{index+1}}</view>
+        <view class="td w-name">{{item.game_name}}</view>
+        <view class="td w-num">{{item.merit}}</view>
+        <view class="td w-num">{{item.power}}</view>
+        <view class="td w-num">{{item.ct}}</view>
+        <view class="td w-num">{{item.cw}}</view>
+        <view class="td w-op"><button class="btn-ghost" size="mini" style="font-size:22rpx;margin:0;padding:0 14rpx;" bindtap="addRecord" data-i="{{index}}">录入</button></view>
+      </view>
+    </view>
+  </scroll-view>
   <view wx:if="{{players.length===0}}" class="muted" style="text-align:center;padding:40rpx;">还没有成员，先添加玩家吧</view>
 </view>
 <view wx:if="{{showRec}}" class="mask" bindtap="closeRec"><view class="sheet" catchtap="">

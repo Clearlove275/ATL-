@@ -16,3 +16,5 @@ page { background: #1d0b0f; color: #f8eee9; font-size: 28rpx; line-height: 1.6; 
 .input { background: #0f141c; border: 1rpx solid #52242b; border-radius: 16rpx; padding: 22rpx; color: #f8eee9; margin-bottom: 20rpx; }
 .row { display: flex; align-items: center; gap: 16rpx; }
 .grow { flex: 1; }
+
+.btn, .btn-ghost { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
