@@ -25,3 +25,4 @@ Thumbs.db
 # 依赖 / 日志
 node_modules/
 *.log
+inbox/
