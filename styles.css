@@ -265,5 +265,6 @@ td.num { font-variant-numeric: tabular-nums; }
 .alliance-card:hover { border-color: #e0443c; transform: translateY(-2px); box-shadow: 0 10px 28px rgba(120,12,14,.25); }
 
 .video-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.video-tools label.inline { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+.video-tools label.inline { display: inline-flex; flex-direction: row; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; white-space: nowrap; }
 .video-tools input[type="number"] { width: 72px; }
+
