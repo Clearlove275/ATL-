@@ -21,8 +21,8 @@
       <view class="td w-name">玩家名称</view>
       <view class="td w-num">武勋</view>
       <view class="td w-num">势力</view>
-      <view class="td w-num">贡献总</view>
-      <view class="td w-num">贡献周</view>
+      <view class="td w-num">总贡献</view>
+      <view class="td w-num">周贡献</view>
       <view class="td w-op">操作</view>
     </view>
     <view class="tr" wx:for="{{players}}" wx:key="id">

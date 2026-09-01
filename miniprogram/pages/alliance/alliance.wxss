@@ -13,7 +13,7 @@
 .tr.th { background: rgba(57,23,30,.65); }
 .td { padding: 16rpx 6rpx; font-size: 24rpx; box-sizing: border-box; color: #f8eee9; }
 .tr.th .td { color: #c49da1; font-size: 22rpx; font-weight: 600; }
-.w-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.w-name { width: 150rpx; flex-shrink: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .w-name .rank { color: #c49da1; font-size: 22rpx; margin-right: 4rpx; }
-.w-num { flex: 1; min-width: 0; text-align: right; font-variant-numeric: tabular-nums; }
-.w-op { width: 88rpx; text-align: center; flex-shrink: 0; }
+.w-num { width: 100rpx; flex-shrink: 0; text-align: center; font-variant-numeric: tabular-nums; }
+.w-op { width: 88rpx; text-align: center; flex-shrink: 0; margin-left: auto; }

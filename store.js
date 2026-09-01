@@ -54,6 +54,7 @@
       signUp: async () => ({ user: LOCAL_USER, error: null }),
       signIn: async () => ({ user: LOCAL_USER, error: null }),
       signOut: async () => {},
+      resetPassword: async () => null,
       getUser: () => LOCAL_USER,
       onAuthChange: (cb) => { cb(LOCAL_USER); return () => {}; }
     };
@@ -258,6 +259,7 @@
         return { user: data && data.user ? data.user : null, error: error ? error.message : null };
       },
       signOut: () => sb.auth.signOut(),
+      resetPassword: async (email) => { const { error } = await sb.auth.resetPasswordForEmail(email); return error ? error.message : null; },
       getUser: () => sb.auth.getUser().then(({ data }) => data.user),
       onAuthChange: (cb) => {
         const { data } = sb.auth.onAuthStateChange((event, session) => cb(session ? session.user : null));

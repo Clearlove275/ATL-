@@ -1049,6 +1049,12 @@
     // 认证
     $("tabLogin").onclick = () => { authMode = "login"; $("tabLogin").classList.add("active"); $("tabSignup").classList.remove("active"); $("authSubmit").textContent = "登录"; $("authMsg").textContent = ""; };
     $("tabSignup").onclick = () => { authMode = "signup"; $("tabSignup").classList.add("active"); $("tabLogin").classList.remove("active"); $("authSubmit").textContent = "注册"; $("authMsg").textContent = ""; };
+    $("forgotPassword").onclick = async () => {
+      const email = (prompt("请输入注册邮箱，我们将发送重置链接：", $("authEmail").value || "") || "").trim();
+      if (!email) return;
+      const err = await Store.auth.resetPassword(email);
+      toast(err ? ("发送失败：" + err) : "重置邮件已发送，请查收邮箱");
+    };
     $("authForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = $("authEmail").value.trim();
@@ -1379,17 +1385,30 @@
   /* ---------- 初始化 ---------- */
   async function init() {
     bindEvents();
-    const _rem = loadRemembered();
-    if (_rem) { $("authEmail").value = _rem.email; $("authPassword").value = _rem.password; $("rememberMe").checked = true; }
+    let entered = false;
     if (!isSupabase) {
       $("signOutBtn").classList.add("hidden");
       const u = await Store.auth.getUser();
       enterApp(u);
+      entered = true;
     } else {
       $("authLocalDemo").classList.add("hidden");
       document.querySelector(".auth-divider").classList.add("hidden");
       const u = await Store.auth.getUser();
-      if (u) enterApp(u); else showAuth();
+      if (u) { enterApp(u); entered = true; }
+      else {
+        const rem = loadRemembered();
+        if (rem && rem.email) {
+          $("authEmail").value = rem.email;
+          $("authPassword").value = rem.password;
+          $("rememberMe").checked = true;
+          try {
+            const r = await Store.auth.signIn(rem.email, rem.password);
+            if (r.user) { enterApp(r.user); entered = true; }
+          } catch (e) {}
+        }
+        if (!entered) showAuth();
+      }
     }
     Store.auth.onAuthChange((u) => { if (u) enterApp(u); else exitApp(); });
     $("deltaStart").disabled = true;

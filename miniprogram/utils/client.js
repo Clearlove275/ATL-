@@ -16,6 +16,7 @@ const auth = {
   async signUp(email, password) { const d = await request('POST', '/auth/v1/signup', { email, password }); if (d.access_token) setSession(d); return d.user || null; },
   async signIn(email, password) { const d = await request('POST', '/auth/v1/token?grant_type=password', { email, password }); setSession(d); return d.user || null; },
   async getUser() { if (!accessToken) return null; try { return await request('GET', '/auth/v1/user'); } catch (e) { return null; } },
+  async resetPassword(email) { return await request("POST", "/auth/v1/recover", { email }); },
   async signOut() { try { if (accessToken) await request('POST', '/auth/v1/logout', {}); } catch (e) {} setSession(null); }
 };
 module.exports = { request, setSession, loadSession, getAccessToken: () => accessToken, auth };

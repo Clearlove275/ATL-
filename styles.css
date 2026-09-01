@@ -384,3 +384,7 @@ td.num { font-variant-numeric: tabular-nums; }
 
 .remember-row { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
 .remember-row input { width: auto; }
+
+.auth-forgot { text-align: right; margin-top: 6px; }
+.auth-forgot span { color: var(--gold2); font-size: 13px; cursor: pointer; }
+.auth-forgot span:hover { text-decoration: underline; }
