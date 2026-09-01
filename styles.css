@@ -340,3 +340,13 @@ td.num { font-variant-numeric: tabular-nums; }
 .feedback-form textarea { width: 100%; resize: vertical; }
 .feedback-form .primary { white-space: nowrap; }
 #fbReplyHint { margin-top: 6px; }
+
+.feedback-float { position: fixed; right: 18px; bottom: 18px; z-index: 900; display: flex; align-items: center; gap: 6px; padding: 11px 16px; border-radius: 30px; border: 1px solid rgba(255,107,94,.55); background: linear-gradient(135deg, var(--gold), #7a1712); color: #fff; font-size: 14px; font-weight: 700; box-shadow: 0 8px 24px rgba(120,12,14,.4); cursor: pointer; transition: filter .15s, transform .1s; }
+.feedback-float:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.feedback-head-right { display: flex; align-items: center; gap: 10px; }
+.fb-sort { display: flex; border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+.fb-sort button { border: none; background: transparent; color: var(--muted); padding: 5px 14px; font-size: 12px; cursor: pointer; }
+.fb-sort button.active { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 700; }
+.fb-like { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 16px; padding: 3px 10px; font-size: 12px; cursor: pointer; margin-right: 8px; transition: color .15s, border-color .15s; }
+.fb-like:hover { color: var(--gold2); border-color: rgba(224,68,60,.5); }
+.fb-like.liked { color: var(--gold2); border-color: rgba(224,68,60,.55); }

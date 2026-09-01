@@ -437,7 +437,13 @@
     <div class="feedback-panel">
       <div class="feedback-head">
         <div><p class="eyebrow">FEEDBACK</p><h3>反馈区</h3></div>
-        <button id="closeFeedback" class="ghost small">关闭</button>
+        <div class="feedback-head-right">
+          <div class="fb-sort">
+            <button id="fbSortNew" class="active">最新</button>
+            <button id="fbSortHot">热度</button>
+          </div>
+          <button id="closeFeedback" class="ghost small">关闭</button>
+        </div>
       </div>
       <div class="feedback-list" id="feedbackList"><div class="muted" style="text-align:center;padding:24px">加载中…</div></div>
       <div class="feedback-form">
@@ -450,6 +456,7 @@
       </div>
     </div>
   </div>
+  <button id="feedbackFloat" class="feedback-float" title="反馈区">💬<span>反馈</span></button>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>

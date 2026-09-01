@@ -205,11 +205,16 @@
     this.feedback = {
       async list() { return (state.feedback || []).slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); },
       async add(p) {
-        const row = { id: uid(), nickname: (p.nickname || "匿名玩家").trim() || "匿名玩家", content: (p.content || "").trim(), parent_id: p.parent_id || null, created_at: nowIso() };
+        const row = { id: uid(), nickname: (p.nickname || "匿名玩家").trim() || "匿名玩家", content: (p.content || "").trim(), parent_id: p.parent_id || null, like_count: 0, created_at: nowIso() };
         state.feedback = state.feedback || [];
         state.feedback.push(row);
         save();
         return row;
+      },
+      async like(id) {
+        const f = (state.feedback || []).find((x) => x.id === id);
+        if (f) { f.like_count = (f.like_count || 0) + 1; save(); }
+        return f;
       }
     };
 
@@ -411,6 +416,11 @@
         }).select().single();
         if (error) throw new Error(error.message);
         return data;
+      },
+      async like(id) {
+        const { error } = await sb.rpc("like_feedback", { p_id: id });
+        if (error) throw new Error(error.message);
+        return true;
       }
     };
 

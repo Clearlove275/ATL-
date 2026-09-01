@@ -1121,8 +1121,11 @@
     $("chooseSheet").onclick = () => $("sheetInput").click();
     $("sheetInput").onchange = (e) => importSheet(e.target.files[0]);
     $("openFeedback").onclick = openFeedback;
+    $("feedbackFloat").onclick = openFeedback;
     $("closeFeedback").onclick = closeFeedback;
     $("fbSubmit").onclick = submitFeedback;
+    $("fbSortNew").onclick = () => setSortMode("new");
+    $("fbSortHot").onclick = () => setSortMode("hot");
     $("feedbackOverlay").addEventListener("click", (e) => { if (e.target === $("feedbackOverlay")) closeFeedback(); });
 
     // 成员数据
@@ -1198,13 +1201,14 @@
 
     // 动态点击委托
     document.addEventListener("click", async (e) => {
-      const t = e.target.closest("[data-aid],[data-addrec],[data-editp],[data-delp],[data-delrec],[data-removemember],[data-batchremove],[data-merge],[data-reply]");
+      const t = e.target.closest("[data-aid],[data-addrec],[data-editp],[data-delp],[data-delrec],[data-removemember],[data-batchremove],[data-merge],[data-reply],[data-like]");
       if (!t) return;
       if (t.hasAttribute("data-aid")) { openAlliance(t.dataset.aid); return; }
       if (t.hasAttribute("data-addrec")) { S.preselectPlayer = t.dataset.addrec; $("recordSource").value = "manual"; showTab("import"); renderImport(); toast("请填写该玩家的武勋 / 势力值并保存"); return; }
       if (t.hasAttribute("data-editp")) { const p = S.players.find((x) => x.id === t.dataset.editp); if (p) openPlayerModal(p); return; }
       if (t.hasAttribute("data-merge")) { openMergeModal(t.dataset.merge); return; }
       if (t.hasAttribute("data-reply")) { replyToId = t.dataset.reply; $("fbReplyHint").textContent = "正在回复，发布后将显示在该评论下方。"; $("fbReplyHint").classList.remove("hidden"); $("fbContent").focus(); return; }
+      if (t.hasAttribute("data-like")) { likeFeedback(t.dataset.like); return; }
       if (t.hasAttribute("data-delp")) {
         const p = S.players.find((x) => x.id === t.dataset.delp);
         if (p && confirm("删除玩家「" + p.game_name + "」及其全部记录？")) {
@@ -1242,6 +1246,11 @@
 
   /* ---------- 反馈区 ---------- */
   let replyToId = null;
+  let feedbackData = [];
+  let feedbackSort = "new";
+  let likedIds = new Set();
+  try { likedIds = new Set(JSON.parse(localStorage.getItem("fb-liked") || "[]")); } catch (e) {}
+
   function timeAgo(iso) {
     if (!iso) return "";
     const diff = Date.now() - new Date(iso).getTime();
@@ -1254,9 +1263,18 @@
     if (d < 30) return d + " 天前";
     return fmtTime(iso);
   }
-  function renderFeedback(list) {
-    const posts = list.filter((f) => !f.parent_id).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    const replies = list.filter((f) => f.parent_id);
+  function sortedPosts() {
+    const posts = feedbackData.filter((f) => !f.parent_id);
+    if (feedbackSort === "hot") {
+      posts.sort((a, b) => (b.like_count || 0) - (a.like_count || 0) || new Date(b.created_at) - new Date(a.created_at));
+    } else {
+      posts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+    return posts;
+  }
+  function renderFeedback() {
+    const posts = sortedPosts();
+    const replies = feedbackData.filter((f) => f.parent_id);
     const box = $("feedbackList");
     if (!posts.length) {
       box.innerHTML = '<div class="muted" style="text-align:center;padding:28px">还没有反馈，来抢沙发吧～</div>';
@@ -1264,24 +1282,35 @@
     }
     box.innerHTML = posts.map((p) => {
       const rs = replies.filter((r) => r.parent_id === p.id).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      const liked = likedIds.has(p.id);
       return '<div class="fb-post">' +
         '<div class="fb-avatar">' + safe(String(p.nickname || "匿").charAt(0)) + '</div>' +
         '<div class="fb-body">' +
           '<div class="fb-meta"><span class="fb-name">' + safe(p.nickname) + '</span><span class="fb-time">' + timeAgo(p.created_at) + '</span></div>' +
           '<div class="fb-content">' + safe(p.content).replace(/\n/g, "<br>") + '</div>' +
-          '<div class="fb-actions"><button class="link-button" data-reply="' + p.id + '">回复</button></div>' +
+          '<div class="fb-actions">' +
+            '<button class="fb-like' + (liked ? " liked" : "") + '" data-like="' + p.id + '">👍 ' + (p.like_count || 0) + '</button>' +
+            '<button class="link-button" data-reply="' + p.id + '">回复</button>' +
+          '</div>' +
           (rs.length ? '<div class="fb-replies">' + rs.map((r) =>
             '<div class="fb-reply"><span class="fb-name">' + safe(r.nickname) + '</span>：<span>' + safe(r.content).replace(/\n/g, "<br>") + '</span><span class="fb-time">' + timeAgo(r.created_at) + '</span></div>'
           ).join("") + '</div>' : '') +
         '</div></div>';
     }).join("");
   }
+  function setSortMode(mode) {
+    feedbackSort = mode;
+    const bNew = $("fbSortNew"), bHot = $("fbSortHot");
+    if (bNew) bNew.classList.toggle("active", mode === "new");
+    if (bHot) bHot.classList.toggle("active", mode === "hot");
+    renderFeedback();
+  }
   async function openFeedback() {
     show($("feedbackOverlay"));
     $("feedbackList").innerHTML = '<div class="muted" style="text-align:center;padding:24px">加载中…</div>';
     try {
-      const list = await Store.feedback.list();
-      renderFeedback(list);
+      feedbackData = await Store.feedback.list();
+      renderFeedback();
     } catch (e) {
       $("feedbackList").innerHTML = '<div class="muted" style="text-align:center;padding:24px">加载失败：' + safe(e.message) + '</div>';
     }
@@ -1290,6 +1319,18 @@
     hide($("feedbackOverlay"));
     replyToId = null;
     $("fbReplyHint").classList.add("hidden");
+  }
+  async function likeFeedback(id) {
+    if (likedIds.has(id)) return;
+    likedIds.add(id);
+    try { localStorage.setItem("fb-liked", JSON.stringify([...likedIds])); } catch (e) {}
+    try {
+      await Store.feedback.like(id);
+      feedbackData = await Store.feedback.list();
+      renderFeedback();
+    } catch (e) {
+      toast("点赞失败：" + e.message);
+    }
   }
   async function submitFeedback() {
     const content = $("fbContent").value.trim();
@@ -1303,8 +1344,8 @@
       replyToId = null;
       $("fbReplyHint").classList.add("hidden");
       toast("反馈已提交，感谢！");
-      const list = await Store.feedback.list();
-      renderFeedback(list);
+      feedbackData = await Store.feedback.list();
+      renderFeedback();
     } catch (e) {
       toast("提交失败：" + e.message);
     } finally {

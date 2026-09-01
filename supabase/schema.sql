@@ -343,6 +343,7 @@ create table if not exists public.feedback (
   nickname text not null default '匿名玩家',
   content text not null,
   parent_id uuid references public.feedback(id) on delete cascade,
+  like_count integer not null default 0,
   created_at timestamptz not null default now()
 );
 create index if not exists feedback_created_idx on public.feedback(created_at);
@@ -351,4 +352,10 @@ drop policy if exists feedback_select on public.feedback;
 create policy feedback_select on public.feedback for select using (true);
 drop policy if exists feedback_insert on public.feedback;
 create policy feedback_insert on public.feedback for insert with check (true);
+
+create or replace function public.like_feedback(p_id uuid)
+returns void
+language sql security definer set search_path = public as $
+  update public.feedback set like_count = like_count + 1 where id = p_id;
+$;
 
