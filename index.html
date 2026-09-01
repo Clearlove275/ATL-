@@ -166,24 +166,36 @@
       <!-- 我的同盟 -->
       <section id="homeView" class="view">
 
+        <section class="hero">
+          <div class="hero-inner">
+            <p class="eyebrow">STRATEGY · ALLIANCE · DATA</p>
+            <h1>率土同盟数据库</h1>
+            <p class="hero-sub">截图识别自动录入 · 同盟数据实时更新 · 武勋 / 势力 / 贡献排行与变化值对比</p>
+          </div>
+        </section>
+
         
         <div class="section-heading"><div><p class="eyebrow">ALLIANCE</p><h2>我的同盟</h2><p>创建一个同盟数据库，或通过邀请码加入盟友的同盟。</p></div></div>
         <div class="home-grid">
           <section class="panel">
             <div class="panel-title"><h3>创建同盟</h3></div>
-            <form id="createForm" class="form-grid">
-              <label>同盟名称 *<input id="createName" required placeholder="例如：纵横四海" /></label>
-              <label>赛季名称<input id="createSeason" placeholder="例如：征服赛季 · 太师乱汉" /></label>
-              <label>你的游戏昵称<input id="createGameName" placeholder="用于自动登记到盟员名单" /></label>
-              <div class="wide form-footer"><span></span><button class="primary" type="submit">创建同盟</button></div>
+            <form id="createForm" class="form-grid home-form">
+              <div class="form-fields">
+                <label>同盟名称 *<input id="createName" required placeholder="例如：纵横四海" /></label>
+                <label>赛季名称<input id="createSeason" placeholder="例如：征服赛季 · 太师乱汉" /></label>
+                <label>你的游戏昵称<input id="createGameName" placeholder="用于自动登记到盟员名单" /></label>
+              </div>
+              <div class="form-footer"><span></span><button class="primary" type="submit">创建同盟</button></div>
             </form>
           </section>
           <section class="panel">
             <div class="panel-title"><h3>加入同盟</h3></div>
-            <form id="joinForm" class="form-grid">
-              <label>邀请码 *<input id="joinCode" required placeholder="8 位邀请码，例如 A1B2C3D4" style="text-transform:uppercase" /></label>
-              <label>你的游戏昵称<input id="joinGameName" placeholder="用于自动登记到盟员名单" /></label>
-              <div class="wide form-footer"><span></span><button class="primary" type="submit">加入同盟</button></div>
+            <form id="joinForm" class="form-grid home-form">
+              <div class="form-fields">
+                <label>邀请码 *<input id="joinCode" required placeholder="8 位邀请码，例如 A1B2C3D4" style="text-transform:uppercase" /></label>
+                <label>你的游戏昵称<input id="joinGameName" placeholder="用于自动登记到盟员名单" /></label>
+              </div>
+              <div class="form-footer"><span></span><button class="primary" type="submit">加入同盟</button></div>
             </form>
           </section>
         </div>
