@@ -14,6 +14,95 @@
 </head>
 <body>
   <div class="bg-scene" aria-hidden="true">
+
+      <div class="scene-mist" aria-hidden="true"></div>
+      <div class="scene-bottom" aria-hidden="true">
+        <svg class="scene-svg" viewBox="0 0 1600 460" preserveAspectRatio="xMidYMax slice">
+          <defs>
+            <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#1d0b0f" stop-opacity="0"/>
+              <stop offset="0.55" stop-color="#1d0b0f" stop-opacity="0.5"/>
+              <stop offset="1" stop-color="#150609" stop-opacity="0.96"/>
+            </linearGradient>
+            <linearGradient id="wallGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3a161c"/>
+              <stop offset="1" stop-color="#19080c"/>
+            </linearGradient>
+            <pattern id="teeth" width="96" height="24" patternUnits="userSpaceOnUse">
+              <rect x="0" y="0" width="42" height="24" fill="url(#wallGrad)"/>
+            </pattern>
+          </defs>
+
+          <ellipse cx="800" cy="430" rx="980" ry="170" fill="#e0443c" opacity="0.16"/>
+
+          <path d="M0 460 L0 296 L170 216 L330 286 L510 188 L700 276 L880 178 L1070 266 L1260 202 L1440 274 L1600 232 L1600 460 Z" fill="#26090e"/>
+          <path d="M0 460 L0 372 L200 322 L420 376 L640 312 L880 378 L1120 318 L1360 374 L1600 336 L1600 460 Z" fill="#1f080c"/>
+
+          <rect x="0" y="392" width="1600" height="68" fill="url(#wallGrad)"/>
+          <rect x="0" y="368" width="1600" height="24" fill="url(#teeth)"/>
+
+          <g class="banner">
+            <rect x="264" y="182" width="6" height="192" fill="#2a0d12"/>
+            <path d="M270 184 L342 202 L270 226 Z" fill="#b3261e"/>
+          </g>
+          <g class="banner banner2">
+            <rect x="1330" y="172" width="6" height="202" fill="#2a0d12"/>
+            <path d="M1336 174 L1270 192 L1336 216 Z" fill="#b3261e"/>
+          </g>
+
+          <g fill="url(#wallGrad)">
+            <rect x="240" y="306" width="140" height="154"/>
+            <rect x="228" y="290" width="164" height="20"/>
+            <rect x="228" y="268" width="30" height="22"/>
+            <rect x="294" y="268" width="30" height="22"/>
+            <rect x="360" y="268" width="30" height="22"/>
+            <rect x="1228" y="306" width="140" height="154"/>
+            <rect x="1216" y="290" width="164" height="20"/>
+            <rect x="1216" y="268" width="30" height="22"/>
+            <rect x="1282" y="268" width="30" height="22"/>
+            <rect x="1348" y="268" width="30" height="22"/>
+          </g>
+
+          <rect x="0" y="300" width="1600" height="160" fill="url(#haze)"/>
+          <rect x="0" y="432" width="1600" height="28" fill="#120509"/>
+        </svg>
+      </div>
+
+      <div class="hero-general general-left" aria-hidden="true">
+        <span class="general-glyph">武</span>
+        <svg class="general-svg" viewBox="0 0 400 640" preserveAspectRatio="xMidYMax meet">
+          <g fill="#12060a">
+            <path d="M40 640 C0 500 20 360 100 300 L170 330 C110 400 130 520 170 640 Z"/>
+            <path d="M120 640 L118 440 C118 380 200 340 230 360 L248 460 C250 560 220 640 120 640 Z"/>
+            <path d="M150 350 C160 300 240 290 260 320 L252 380 C220 400 170 400 150 380 Z"/>
+            <circle cx="205" cy="240" r="38"/>
+            <path d="M165 242 C165 200 247 200 247 242 Z"/>
+            <path d="M205 202 C190 156 150 140 112 160 C152 164 178 184 196 218 Z"/>
+            <path d="M202 274 C196 340 240 380 296 398 C306 424 294 442 274 432 C226 410 184 370 180 326 Z"/>
+            <path d="M242 340 L306 372 L294 410 L248 392 Z"/>
+            <path d="M298 380 L344 110 L362 112 L324 382 Z"/>
+            <path d="M344 110 C320 56 258 48 226 82 C266 90 302 108 338 142 Z"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="hero-general general-right" aria-hidden="true">
+        <span class="general-glyph">谋</span>
+        <svg class="general-svg" viewBox="0 0 400 640" preserveAspectRatio="xMidYMax meet">
+          <g fill="#12060a">
+            <path d="M360 640 C400 500 380 360 300 300 L230 330 C290 400 270 520 230 640 Z"/>
+            <path d="M280 640 L282 440 C282 380 200 340 170 360 L152 460 C150 560 180 640 280 640 Z"/>
+            <path d="M250 350 C240 300 160 290 140 320 L148 380 C180 400 230 400 250 380 Z"/>
+            <circle cx="195" cy="240" r="38"/>
+            <path d="M235 242 C235 200 153 200 153 242 Z"/>
+            <path d="M195 202 C180 150 136 126 96 140 C138 150 168 178 190 216 Z"/>
+            <path d="M195 202 C212 148 254 124 292 142 C252 152 224 178 202 216 Z"/>
+            <path d="M102 380 L56 110 L74 112 L110 382 Z"/>
+            <path d="M56 110 C80 56 142 48 174 82 C134 90 98 108 62 142 Z"/>
+            <path d="M60 110 L40 58 L62 58 Z"/>
+          </g>
+        </svg>
+      </div>
     <div class="bg-grid"></div>
     <div class="bg-glow glow-a"></div>
     <div class="bg-glow glow-b"></div>
@@ -76,6 +165,18 @@
     <main>
       <!-- 我的同盟 -->
       <section id="homeView" class="view">
+
+        <section class="hero">
+          <div class="hero-inner">
+            <p class="eyebrow">STRATEGY · ALLIANCE · DATA</p>
+            <h1>率土同盟数据库</h1>
+            <p class="hero-sub">截图识别自动录入 · 同盟数据库实时更新 · 武勋 / 势力 / 贡献排行与变化值对比</p>
+            <div class="hero-actions">
+              <button class="primary" data-goto="#createForm">＋ 创建同盟</button>
+              <button class="ghost" data-goto="#joinForm">用邀请码加入</button>
+            </div>
+          </div>
+        </section>
         <div class="section-heading"><div><p class="eyebrow">ALLIANCE</p><h2>我的同盟</h2><p>创建一个同盟数据库，或通过邀请码加入盟友的同盟。</p></div></div>
         <div class="home-grid">
           <section class="panel">
