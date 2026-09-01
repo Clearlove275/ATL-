@@ -84,6 +84,12 @@
   }
 
   /* ---------- 登录 / 认证 ---------- */
+  function loadRemembered() {
+    try { const s = JSON.parse(localStorage.getItem("atl_remembered") || "null"); return (s && s.email) ? s : null; } catch (e) { return null; }
+  }
+  function saveRemembered(email, pw, remember) {
+    try { if (remember) localStorage.setItem("atl_remembered", JSON.stringify({ email: email, password: pw })); else localStorage.removeItem("atl_remembered"); } catch (e) {}
+  }
   let authMode = "login";
 
   function showAuth() {
@@ -1071,6 +1077,7 @@
         }
         return;
       }
+      saveRemembered(email, pw, $("rememberMe").checked);
       if (res.user) { enterApp(res.user); }
       else { $("authMsg").textContent = "注册成功，已自动登录。"; }
     });
@@ -1372,6 +1379,8 @@
   /* ---------- 初始化 ---------- */
   async function init() {
     bindEvents();
+    const _rem = loadRemembered();
+    if (_rem) { $("authEmail").value = _rem.email; $("authPassword").value = _rem.password; $("rememberMe").checked = true; }
     if (!isSupabase) {
       $("signOutBtn").classList.add("hidden");
       const u = await Store.auth.getUser();

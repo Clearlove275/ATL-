@@ -1,2 +1,4 @@
 .tab { flex: 1; text-align: center; padding: 16rpx 0; color: #c49da1; border: 1rpx solid #52242b; border-radius: 14rpx; }
 .tab.active { background: linear-gradient(135deg, #e0443c, #ff6b5e); color: #fff; font-weight: 700; }
+.remember-row { display: flex; align-items: center; gap: 10rpx; margin: 4rpx 0 20rpx; }
+.remember-row switch { transform: scale(.8); }

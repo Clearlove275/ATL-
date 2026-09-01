@@ -381,3 +381,6 @@ td.num { font-variant-numeric: tabular-nums; }
   .modal-card { padding: 18px; }
   .compare-select { gap: 10px; }
 }
+
+.remember-row { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.remember-row input { width: auto; }

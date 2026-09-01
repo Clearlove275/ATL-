@@ -11,6 +11,10 @@
     </view>
     <input class="input" type="text" placeholder="邮箱" value="{{email}}" bindinput="onEmail" />
     <input class="input" password placeholder="密码" value="{{password}}" bindinput="onPassword" />
+    <view class="remember-row">
+      <switch checked="{{remember}}" bindchange="onRemember" color="#e0443c" />
+      <text class="muted">记住账号和密码</text>
+    </view>
     <button class="btn" loading="{{loading}}" bindtap="submit">{{mode==='login'?'登录':'注册'}}</button>
     <view class="muted" style="margin-top:16rpx;min-height:36rpx;">{{msg}}</view>
   </view>
