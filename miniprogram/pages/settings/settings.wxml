@@ -1,0 +1,12 @@
+<view style="padding:24rpx;">
+  <view class="muted" style="margin-bottom:16rpx;">当前身份：{{myRole==='owner'?'盟主':(myRole==='admin'?'管理':'成员')}} · 共 {{members.length}} 名成员</view>
+  <view wx:for="{{members}}" wx:key="id" class="card" style="margin-bottom:16rpx;">
+    <view class="row"><view class="h3 grow">{{item.game_name || item.user_id}}</view><view class="pill">{{item.roleName}}</view></view>
+    <view class="row" style="margin-top:14rpx;" wx:if="{{canManage && item.role!=='owner'}}">
+      <button class="btn-ghost grow" style="font-size:24rpx;margin:0;" size="mini" bindtap="changeRole" data-i="{{index}}">设为管理/成员</button>
+      <button class="btn-ghost grow" style="font-size:24rpx;margin:0;" size="mini" bindtap="removeMember" data-i="{{index}}">移除</button>
+    </view>
+  </view>
+  <view wx:if="{{members.length===0}}" class="muted" style="text-align:center;padding:40rpx;">暂无成员</view>
+  <view wx:if="{{!canManage}}" class="muted" style="text-align:center;padding:20rpx;">仅盟主/管理员可管理成员权限</view>
+</view>

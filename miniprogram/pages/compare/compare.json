@@ -1,3 +1,4 @@
 {
-  "navigationBarTitleText": "变化值对比"
+  "navigationBarTitleText": "变化值对比",
+  "enablePullDownRefresh": true
 }

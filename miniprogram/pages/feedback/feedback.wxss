@@ -1,0 +1,6 @@
+.like { font-size: 24rpx; color: #c49da1; margin-right: 30rpx; }
+.like.liked { color: #ff6b5e; }
+.replies { margin-top: 12rpx; background: #39171e; border-radius: 12rpx; padding: 12rpx 16rpx; }
+.rp { font-size: 24rpx; color: #f8eee9; padding: 4rpx 0; }
+.rp-n { color: #ff6b5e; }
+textarea.input { min-height: 120rpx; width: 100%; box-sizing: border-box; }
