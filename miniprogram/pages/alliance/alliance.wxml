@@ -1,14 +1,18 @@
 <view style="padding:24rpx;">
-  <view class="card" style="margin-bottom:20rpx;"><view class="h3">{{name}}</view><view class="muted">{{season}} · 邀请码 {{code}}</view></view>
-  <view class="card" style="margin-bottom:20rpx;"><view class="h3" style="margin-bottom:16rpx;">数据概览</view>
+  <view class="card card-accent" style="margin-bottom:20rpx;">
+    <view class="row"><view class="h2 grow">{{name}}</view><view class="pill">{{role==='owner'?'盟主':(role==='admin'?'管理':'成员')}}</view></view>
+    <view class="muted" style="margin-top:8rpx;">{{season}} · 邀请码 {{code}}</view>
+  </view>
+  <view class="card" style="margin-bottom:20rpx;">
+    <view class="h3" style="margin-bottom:16rpx;">数据概览</view>
     <view class="grid">
       <view class="gcell"><view class="num">{{stats.players||0}}</view><view class="muted">成员</view></view>
       <view class="gcell"><view class="num">{{stats.records||0}}</view><view class="muted">记录</view></view>
-      <view class="gcell"><view class="num">{{stats.topMerit||0}}</view><view class="muted">最高武勋</view></view>
-      <view class="gcell"><view class="num">{{stats.topPower||0}}</view><view class="muted">最高势力</view></view>
+      <view class="gcell"><view class="num num-accent">{{stats.topMerit||0}}</view><view class="muted">最高武勋</view></view>
+      <view class="gcell"><view class="num num-accent">{{stats.topPower||0}}</view><view class="muted">最高势力</view></view>
     </view>
   </view>
-  <view class="row" style="margin-bottom:16rpx;"><button class="btn grow" bindtap="chooseImage">📷 截图识别</button><button class="btn-ghost grow" bindtap="chooseVideo">🎬 视频识别</button></view>
+  <view class="row" style="margin-bottom:16rpx;"><button class="btn grow" bindtap="chooseImage">📷 截图识别</button><button class="btn-ghost grow" bindtap="chooseVideo">🎬 视频</button></view>
   <view class="row" style="margin-bottom:16rpx;"><button class="btn-ghost grow" bindtap="chooseCsv">📄 CSV 导入</button><button class="btn-ghost grow" bindtap="openAddPlayer">＋ 添加玩家</button></view>
   <view class="row" style="margin-bottom:16rpx;"><button class="btn-ghost grow" bindtap="goCompare">变化值对比</button><button class="btn-ghost grow" bindtap="goCharts">数据图表</button><button class="btn-ghost grow" bindtap="goSettings">同盟设置</button></view>
   <view class="h3" style="margin:10rpx 0 16rpx;">成员数据</view>

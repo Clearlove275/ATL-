@@ -1,11 +1,18 @@
-page { background: #1d0b0f; color: #f8eee9; font-size: 28rpx; }
-.btn { background: linear-gradient(135deg, #e0443c, #ff6b5e); color: #fff; border-radius: 40rpx; font-size: 30rpx; font-weight: 600; }
-.btn::after { border: none; }
-.btn-ghost { background: #39171e; color: #f8eee9; border: 1rpx solid #52242b; border-radius: 40rpx; font-size: 30rpx; }
-.btn-ghost::after { border: none; }
-.card { background: #2d1218; border: 1rpx solid #52242b; border-radius: 24rpx; padding: 28rpx; }
-.input { background: #0f141c; border: 1rpx solid #52242b; border-radius: 14rpx; padding: 20rpx; color: #f8eee9; margin-bottom: 20rpx; }
-.muted { color: #c49da1; font-size: 24rpx; }
+page { background: #1d0b0f; color: #f8eee9; font-size: 28rpx; line-height: 1.6; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+.brand-mark { width: 92rpx; height: 92rpx; border-radius: 24rpx; background: linear-gradient(135deg, #e0443c, #7a1712); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 48rpx; font-weight: 800; box-shadow: 0 0 26rpx rgba(224,68,60,.5); }
+.brand-title { font-size: 40rpx; font-weight: 800; }
+.eyebrow { letter-spacing: .22em; color: #e0443c; font-size: 20rpx; font-weight: 700; text-transform: uppercase; }
+.h1 { font-size: 44rpx; font-weight: 800; }
+.h2 { font-size: 36rpx; font-weight: 700; }
 .h3 { font-size: 32rpx; font-weight: 700; }
+.muted { color: #c49da1; font-size: 24rpx; }
+.card { background: #2d1218; border: 1rpx solid #52242b; border-radius: 28rpx; padding: 28rpx; box-shadow: 0 10rpx 30rpx rgba(22,2,4,.35); }
+.card-accent { border-color: rgba(224,68,60,.42); background: linear-gradient(160deg, rgba(224,68,60,.12), #2d1218); }
+.btn { background: linear-gradient(135deg, #e0443c, #ff6b5e); color: #fff; border-radius: 44rpx; font-size: 30rpx; font-weight: 600; box-shadow: 0 8rpx 20rpx rgba(224,68,60,.28); }
+.btn::after { border: none; }
+.btn-ghost { background: rgba(57,23,30,.7); color: #f8eee9; border: 1rpx solid #52242b; border-radius: 44rpx; font-size: 30rpx; }
+.btn-ghost::after { border: none; }
+.pill { display: inline-flex; align-items: center; font-size: 20rpx; padding: 4rpx 18rpx; border-radius: 20rpx; background: rgba(224,68,60,.15); color: #ff6b5e; border: 1rpx solid rgba(224,68,60,.35); }
+.input { background: #0f141c; border: 1rpx solid #52242b; border-radius: 16rpx; padding: 22rpx; color: #f8eee9; margin-bottom: 20rpx; }
 .row { display: flex; align-items: center; gap: 16rpx; }
 .grow { flex: 1; }
