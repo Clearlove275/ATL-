@@ -2,6 +2,7 @@ const store = require('../../utils/store');
 const client = require('../../utils/client');
 const app = getApp();
 Page({ data: { alliances: [], show: '', name: '', season: '', gameName: '', code: '', loading: false },
+  noop() {},
   onShow() { this.load(); },
   onPullDownRefresh() { this.load().then(() => wx.stopPullDownRefresh()); },
   async load() { try { const list = await store.alliances.list(); this.setData({ alliances: list }); } catch (e) {} },

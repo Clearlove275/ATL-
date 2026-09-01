@@ -2,6 +2,7 @@ const store = require('../../utils/store');
 let timer = null;
 Page({
   data: { aid:'', name:'', season:'', code:'', role:'', stats:{}, players:[], records:[], showRec:false, showPlayer:false, showBatch:false, rec:{}, newPlayerName:'', selPid:'', batchRows:[], savingBatch:false },
+  noop() {},
   onLoad(o) { this.setData({ aid:o.id, name:decodeURIComponent(o.name||''), season:decodeURIComponent(o.season||''), code:o.code||'', role:o.role||'member' }); wx.setNavigationBarTitle({ title: o.name ? decodeURIComponent(o.name) : '同盟' }); this.load(); },
   onShow() { if (this.data.aid) { this.load(); this.startTimer(); } },
   onHide() { this.stopTimer(); },

@@ -36,7 +36,7 @@
   </view>
   <view wx:if="{{players.length===0}}" class="muted" style="text-align:center;padding:40rpx;">还没有成员，先添加玩家吧</view>
 </view>
-<view wx:if="{{showRec}}" class="mask" bindtap="closeRec"><view class="sheet" catchtap="">
+<view wx:if="{{showRec}}" class="mask" bindtap="closeRec"><view class="sheet" catchtap="noop">
   <view class="h3" style="margin-bottom:16rpx;">录入数据</view>
   <picker range="{{players}}" range-key="game_name" bindchange="pickPlayer"><view class="input">{{rec.name || '请选择玩家'}}</view></picker>
   <input class="input" type="number" placeholder="武勋" value="{{rec.merit}}" data-k="merit" bindinput="onRec" />
@@ -45,7 +45,7 @@
   <input class="input" type="number" placeholder="贡献周量" value="{{rec.cw}}" data-k="cw" bindinput="onRec" />
   <button class="btn" bindtap="saveRec">保存</button>
 </view></view>
-<view wx:if="{{showBatch}}" class="mask" bindtap="closeBatch"><view class="sheet sheet-tall" catchtap="">
+<view wx:if="{{showBatch}}" class="mask" bindtap="closeBatch"><view class="sheet sheet-tall" catchtap="noop">
   <view class="h3" style="margin-bottom:12rpx;">识别到 {{batchRows.length}} 名成员</view>
   <view class="muted" style="margin-bottom:12rpx;">核对无误后点批量保存，未匹配到的名字会新建玩家。</view>
   <scroll-view scroll-y style="max-height:50vh;">
@@ -57,7 +57,7 @@
   </scroll-view>
   <button class="btn" style="margin-top:16rpx;" loading="{{savingBatch}}" bindtap="saveBatch">批量保存</button>
 </view></view>
-<view wx:if="{{showPlayer}}" class="mask" bindtap="closePlayer"><view class="sheet" catchtap="">
+<view wx:if="{{showPlayer}}" class="mask" bindtap="closePlayer"><view class="sheet" catchtap="noop">
   <view class="h3" style="margin-bottom:16rpx;">添加玩家</view>
   <input class="input" placeholder="游戏昵称" value="{{newPlayerName}}" bindinput="onNewPlayer" />
   <button class="btn" bindtap="savePlayer">保存</button>

@@ -14,7 +14,7 @@
   <button class="btn-ghost" style="margin-top:20rpx;" bindtap="goFeedback">💬 反馈区</button>
   <button class="btn-ghost" style="margin-top:16rpx;" bindtap="logout">退出登录</button>
 </view>
-<view wx:if="{{show}}" class="mask" bindtap="close"><view class="sheet" catchtap="">
+<view wx:if="{{show}}" class="mask" bindtap="close"><view class="sheet" catchtap="noop">
   <view class="h3" style="margin-bottom:20rpx;">{{show==='create'?'创建同盟':'加入同盟'}}</view>
   <block wx:if="{{show==='create'}}">
     <input class="input" placeholder="同盟名称 *" value="{{name}}" bindinput="onName" />
