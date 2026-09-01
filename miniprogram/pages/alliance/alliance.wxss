@@ -7,14 +7,13 @@
 .sheet { width: 100%; background: #2d1218; border-radius: 28rpx 28rpx 0 0; padding: 32rpx 28rpx 60rpx; }
 .batch-row { display: flex; align-items: center; padding: 16rpx 0; border-bottom: 1rpx solid rgba(82,36,43,.55); }
 .batch-row .grow { flex: 1; }
-.table-scroll { width: 100%; }
-.table { min-width: 980rpx; border: 1rpx solid #52242b; border-radius: 16rpx; overflow: hidden; }
+.table { width: 100%; border: 1rpx solid #52242b; border-radius: 16rpx; overflow: hidden; }
 .tr { display: flex; align-items: center; border-bottom: 1rpx solid rgba(82,36,43,.5); }
 .tr:last-child { border-bottom: none; }
 .tr.th { background: rgba(57,23,30,.65); }
-.td { padding: 18rpx 12rpx; font-size: 26rpx; box-sizing: border-box; color: #f8eee9; }
-.tr.th .td { color: #c49da1; font-size: 24rpx; font-weight: 600; }
-.w-rank { width: 80rpx; text-align: center; flex-shrink: 0; }
-.w-name { width: 200rpx; flex-shrink: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.w-num { width: 150rpx; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.w-op { width: 130rpx; text-align: center; flex-shrink: 0; }
+.td { padding: 16rpx 6rpx; font-size: 24rpx; box-sizing: border-box; color: #f8eee9; }
+.tr.th .td { color: #c49da1; font-size: 22rpx; font-weight: 600; }
+.w-name { width: 190rpx; flex-shrink: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.w-name .rank { color: #c49da1; font-size: 22rpx; margin-right: 4rpx; }
+.w-num { width: 110rpx; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.w-op { width: 88rpx; text-align: center; flex-shrink: 0; }
