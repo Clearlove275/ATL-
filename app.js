@@ -277,10 +277,20 @@
     ).join("");
   }
 
+  function myUserId() {
+    try {
+      const u = Store.myUser && Store.myUser();
+      if (u && !u.then && u.id) return u.id;
+    } catch (e) {}
+    return null;
+  }
+
   /* ---------- 导入数据 ---------- */
   function renderImport() {
     const sel = $("recordPlayer");
-    const prev = S.preselectPlayer || sel.value;
+    const myId = myUserId();
+    const myPlayer = myId ? S.players.find((p) => p.user_id === myId) : null;
+    const prev = S.preselectPlayer || (myPlayer && myPlayer.id) || sel.value;
     sel.innerHTML = '<option value="">请选择玩家</option>' + S.players.map((p) =>
       '<option value="' + p.id + '">' + safe(p.game_name) + '</option>'
     ).join("");
@@ -321,7 +331,7 @@
     $("rosterBody").innerHTML = aggs.length ? aggs.map((a, i) =>
       '<tr>' +
       '<td>' + (i + 1) + '</td>' +
-      '<td><span class="table-name">' + safe(a.p.game_name) + '</span><br><span class="muted">' + safe(a.p.duty || "—") + '</span></td>' +
+      '<td><span class="table-name">' + safe(a.p.game_name) + '</span>' + (a.p.user_id === myUserId() ? '<span class="pill me">我</span>' : '') + '<br><span class="muted">' + safe(a.p.duty || "—") + '</span></td>' +
       '<td>' + safe(a.p.team || "—") + '</td>' +
       '<td class="num">' + fmt(a.latestMerit) + '</td>' +
       '<td class="num">' + fmt(a.latestPower) + '</td>' +

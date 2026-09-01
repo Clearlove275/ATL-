@@ -87,11 +87,16 @@
       async join(code, gameName) {
         const alliance = state.alliances.find((a) => a.invite_code.toUpperCase() === code.trim().toUpperCase());
         if (!alliance) throw new Error("邀请码无效");
-        if (!state.members.some((m) => m.alliance_id === alliance.id && m.user_id === LOCAL_USER.id)) {
-          state.members.push({ id: uid(), alliance_id: alliance.id, user_id: LOCAL_USER.id, role: "member", game_name: gameName.trim(), joined_at: nowIso() });
-          if (gameName.trim()) addPlayerLocal(alliance.id, gameName.trim(), "", "", LOCAL_USER.id);
-          save();
+        const name = gameName.trim();
+        let m = state.members.find((x) => x.alliance_id === alliance.id && x.user_id === LOCAL_USER.id);
+        if (!m) {
+          m = { id: uid(), alliance_id: alliance.id, user_id: LOCAL_USER.id, role: "member", game_name: name, joined_at: nowIso() };
+          state.members.push(m);
+        } else if (name) {
+          m.game_name = name;
         }
+        if (name) addPlayerLocal(alliance.id, name, "", "", LOCAL_USER.id);
+        save();
         return alliance;
       },
       async update(id, patch) {
@@ -178,8 +183,15 @@
     };
 
     function addPlayerLocal(aid, name, team, duty, userId) {
-      if (state.players.some((p) => p.alliance_id === aid && p.game_name === name.trim() && p.user_id === userId)) return;
-      state.players.push({ id: uid(), alliance_id: aid, game_name: name.trim(), team: team || "", duty: duty || "", user_id: userId || null, created_at: nowIso() });
+      const nm = name.trim();
+      if (!nm) return;
+      const existing = state.players.find((p) => p.alliance_id === aid && p.game_name === nm);
+      if (!existing) {
+        state.players.push({ id: uid(), alliance_id: aid, game_name: nm, team: team || "", duty: duty || "", user_id: userId || null, created_at: nowIso() });
+      } else if (!existing.user_id && userId) {
+        // 认领盟主此前导入但未归属的玩家，避免同名重复
+        existing.user_id = userId;
+      }
     }
   }
 

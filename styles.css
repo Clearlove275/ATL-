@@ -308,3 +308,5 @@ td.num { font-variant-numeric: tabular-nums; }
 .hero h1 { font-size: clamp(28px, 4.2vw, 48px); font-weight: 800; letter-spacing: .04em; line-height: 1.12; margin: 8px 0 10px; background: linear-gradient(180deg, #ffffff, #f0c9c4); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero-sub { color: var(--muted); font-size: 14px; max-width: 640px; margin: 0 auto; }
 @media (max-width: 640px) { .hero { padding: 26px 16px 22px; } .hero-sub { font-size: 13px; } }
+
+.pill.me { background: rgba(224,68,60,.22); color: #fff; border-color: rgba(255,107,94,.5); margin-left: 6px; }
