@@ -278,6 +278,7 @@
   }
 
   function myUserId() {
+    if (S.user && S.user.id) return S.user.id;
     try {
       const u = Store.myUser && Store.myUser();
       if (u && !u.then && u.id) return u.id;
@@ -896,6 +897,68 @@
     btn.disabled = false;
   }
 
+  /* ---------- Excel / CSV 导入 ---------- */
+  const COL_ALIASES = {
+    name: ["成员", "玩家", "名称", "昵称", "游戏昵称", "member", "name"],
+    merit: ["武勋", "功勋", "本周功勋", "战功", "merit"],
+    power: ["势力值", "势力", "power"],
+    contributionTotal: ["贡献总量", "贡献总", "累计贡献", "总贡献", "contributiontotal"],
+    contributionWeek: ["贡献周量", "贡献周", "周贡献", "周量", "contributionweek"]
+  };
+  function normCell(v) { return String(v == null ? "" : v).trim().toLowerCase().replace(/[\s*#：:（）()]/g, ""); }
+  function parseTableRows(rows) {
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(rows.length, 15); i++) {
+      const r = rows[i] || [];
+      if (r.some((c) => { const s = normCell(c); return s.includes("武勋") || s.includes("势力") || s.includes("贡献") || s.includes("成员") || s.includes("玩家") || s.includes("merit") || s.includes("power"); })) { headerIdx = i; break; }
+    }
+    if (headerIdx < 0) return [];
+    const header = (rows[headerIdx] || []).map(normCell);
+    const colOf = (field) => header.findIndex((s) => COL_ALIASES[field].some((alias) => s.includes(alias)));
+    const cName = colOf("name"), cMerit = colOf("merit"), cPower = colOf("power"), cTotal = colOf("contributionTotal"), cWeek = colOf("contributionWeek");
+    if (cName < 0) return [];
+    const out = [];
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const r = rows[i] || [];
+      const name = String(r[cName] == null ? "" : r[cName]).trim();
+      if (!name) continue;
+      const toNum = (idx) => {
+        if (idx < 0) return 0;
+        const v = r[idx];
+        if (v == null || v === "") return 0;
+        if (typeof v === "number") return Math.round(v);
+        const p = window.OCR && window.OCR.parseChineseNumber ? window.OCR.parseChineseNumber(String(v)) : null;
+        if (p != null) return p;
+        const n = Number(String(v).replace(/[^\d.-]/g, ""));
+        return isFinite(n) ? Math.round(n) : 0;
+      };
+      out.push({ name, merit: toNum(cMerit), power: toNum(cPower), contributionTotal: toNum(cTotal), contributionWeek: toNum(cWeek) });
+    }
+    return out;
+  }
+  async function importSheet(file) {
+    if (!file) return;
+    if (!canManagePlayers()) { toast("只有盟主或管理员可以导入表格数据"); return; }
+    if (!window.XLSX) { toast("表格解析组件未加载，请检查网络后刷新"); return; }
+    $("sheetStatus").textContent = "正在解析 " + file.name + " …";
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = window.XLSX.read(buf, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = window.XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+      batchRows = parseTableRows(rows);
+      renderBatchRows();
+      if (batchRows.length) {
+        $("batchPanel").classList.remove("hidden");
+        $("sheetStatus").textContent = "已解析 " + batchRows.length + " 行，请核对后保存。";
+      } else {
+        $("sheetStatus").textContent = "未识别到有效数据，请确认表头含「成员 / 武勋 / 势力值 / 贡献」等列。";
+      }
+    } catch (e) {
+      $("sheetStatus").textContent = "解析失败：" + (e && e.message ? e.message : e);
+    }
+  }
+
   function findPlayerByName(name) {
     const n = (name || "").trim().toLowerCase();
     return S.players.find((p) => (p.game_name || "").trim().toLowerCase() === n);
@@ -1055,6 +1118,8 @@
     $("chooseVideo").onclick = () => $("videoInput").click();
     $("videoInput").onchange = (e) => setVideo(e.target.files[0]);
     $("runVideoOcr").onclick = runVideoOcr;
+    $("chooseSheet").onclick = () => $("sheetInput").click();
+    $("sheetInput").onchange = (e) => importSheet(e.target.files[0]);
 
     // 成员数据
     $("addPlayerBtn").onclick = () => openPlayerModal(null);

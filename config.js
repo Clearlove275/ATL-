@@ -9,7 +9,7 @@
  *   导入截图时优先用智谱 GLM-4.6V-Flash 视觉模型识别，失败自动回退本地识别。
  * ============================================================ */
 window.APP_CONFIG = {
-  backend: "local",
+  backend: "supabase",
   supabaseUrl: "https://uqxjimxhtvjqpkmeqbnn.supabase.co",
   supabaseAnonKey: "sb_publishable_e9KyKQVfc_12_FpFgO_PPg_pfY4JWSa",
 

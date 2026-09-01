@@ -293,6 +293,15 @@
             <video id="videoPreview" class="preview hidden" muted playsinline preload="auto"></video>
             <div id="videoStatus" class="ocr-status">尚未选择视频</div>
           </section>
+          <section class="panel" style="margin-top:16px">
+            <div class="panel-title"><div><p class="eyebrow">TABLE IMPORT</p><h3>Excel / CSV 表格导入</h3></div></div>
+            <p class="muted">仅盟主 / 管理员可用。上传 .xlsx / .xls / .csv，表头需包含：成员（或玩家名）、武勋、势力值、贡献总量、贡献周量（可缺省部分列）。</p>
+            <div class="video-tools">
+              <input id="sheetInput" type="file" accept=".xlsx,.xls,.csv" hidden />
+              <button id="chooseSheet" class="secondary">选择文件</button>
+              <span id="sheetStatus" class="ocr-status">尚未选择文件</span>
+            </div>
+          </section>
           <section id="batchPanel" class="panel hidden" style="margin-top:16px">
             <div class="panel-title"><h3>识别到成员列表（多行）</h3><span id="batchSummary" class="muted"></span></div>
             <p class="muted">自动识别可能有误，请逐行核对名字与数值后再保存；未匹配到的名字会作为新玩家加入。</p>
@@ -423,6 +432,7 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="config.js?v=2026090120"></script>
   <script src="ocr.js?v=2026090120"></script>
   <script src="store.js?v=2026090120"></script>

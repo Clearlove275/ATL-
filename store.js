@@ -326,9 +326,8 @@
         return data || [];
       },
       async add(aid, p) {
-        const u = await uidOf();
         const { data, error } = await sb.from("players").insert({
-          alliance_id: aid, game_name: p.game_name.trim(), team: p.team || "", duty: p.duty || "", user_id: u
+          alliance_id: aid, game_name: p.game_name.trim(), team: p.team || "", duty: p.duty || "", user_id: p.user_id || null
         }).select().single();
         if (error) throw new Error(error.message);
         return data;
@@ -345,10 +344,8 @@
       },
       async merge(aid, fromId, toId) {
         if (fromId === toId) return;
-        const { error: e1 } = await sb.from("records").update({ player_id: toId }).eq("player_id", fromId).eq("alliance_id", aid);
-        if (e1) throw new Error(e1.message);
-        const { error: e2 } = await sb.from("players").delete().eq("id", fromId).eq("alliance_id", aid);
-        if (e2) throw new Error(e2.message);
+        const { error } = await sb.rpc("merge_players", { p_alliance_id: aid, p_from_id: fromId, p_to_id: toId });
+        if (error) throw new Error(error.message);
         return true;
       }
     };

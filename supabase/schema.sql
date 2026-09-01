@@ -39,7 +39,8 @@ create table if not exists public.players (
   team text not null default '',
   duty text not null default '',
   user_id uuid references auth.users(id) on delete set null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (alliance_id, game_name)
 );
 create index if not exists players_alliance_idx on public.players(alliance_id);
 
@@ -110,7 +111,9 @@ begin
 
   if nullif(trim(p_game_name), '') is not null then
     insert into public.players(alliance_id, game_name, user_id)
-    values (v_alliance.id, trim(p_game_name), auth.uid());
+    values (v_alliance.id, trim(p_game_name), auth.uid())
+    on conflict (alliance_id, game_name)
+    do update set user_id = coalesce(public.players.user_id, excluded.user_id);
   end if;
 
   return v_alliance;
@@ -141,15 +144,67 @@ begin
 
   insert into public.alliance_members(alliance_id, user_id, role, game_name)
   values (v_alliance.id, auth.uid(), 'member', trim(p_game_name))
-  on conflict (alliance_id, user_id) do nothing;
+  on conflict (alliance_id, user_id) do update set game_name = excluded.game_name;
 
   if nullif(trim(p_game_name), '') is not null then
     insert into public.players(alliance_id, game_name, user_id)
     values (v_alliance.id, trim(p_game_name), auth.uid())
-    on conflict do nothing;
+    on conflict (alliance_id, game_name)
+    do update set user_id = coalesce(public.players.user_id, excluded.user_id);
   end if;
 
   return v_alliance;
+end;
+$$;
+
+-- ---------- RPC：合并玩家（改名继承） ----------
+create or replace function public.merge_players(
+  p_alliance_id uuid,
+  p_from_id uuid,
+  p_to_id uuid
+)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  v_role text;
+  v_from_user uuid;
+  v_to_user uuid;
+begin
+  if auth.uid() is null then
+    raise exception '请先登录';
+  end if;
+  if p_from_id = p_to_id then
+    return;
+  end if;
+
+  select m.role into v_role
+  from public.alliance_members m
+  where m.alliance_id = p_alliance_id and m.user_id = auth.uid();
+  if v_role is null then
+    raise exception '你不是该同盟成员';
+  end if;
+
+  select user_id into v_from_user from public.players
+  where id = p_from_id and alliance_id = p_alliance_id;
+  select user_id into v_to_user from public.players
+  where id = p_to_id and alliance_id = p_alliance_id;
+  if v_from_user is null or v_to_user is null then
+    raise exception '玩家不存在';
+  end if;
+
+  if v_role not in ('owner','admin') then
+    if v_to_user is distinct from auth.uid() then
+      raise exception '你只能合并到自己的角色';
+    end if;
+    if v_from_user is not null and v_from_user is distinct from auth.uid() then
+      raise exception '你只能继承未认领或自己的旧数据';
+    end if;
+  end if;
+
+  update public.records set player_id = p_to_id
+  where alliance_id = p_alliance_id and player_id = p_from_id;
+  delete from public.players
+  where id = p_from_id and alliance_id = p_alliance_id;
 end;
 $$;
 
@@ -210,7 +265,7 @@ create policy players_select on public.players
 
 drop policy if exists players_insert on public.players;
 create policy players_insert on public.players
-  for insert with check (public.is_member_of(alliance_id));
+  for insert with check (public.role_in(alliance_id) in ('owner','admin'));
 
 drop policy if exists players_update on public.players;
 create policy players_update on public.players
@@ -236,11 +291,23 @@ create policy records_select on public.records
 
 drop policy if exists records_insert on public.records;
 create policy records_insert on public.records
-  for insert with check (public.is_member_of(alliance_id));
+  for insert with check (
+    public.is_member_of(alliance_id)
+    and (
+      public.role_in(alliance_id) in ('owner','admin')
+      or exists (select 1 from public.players p where p.id = player_id and p.user_id = auth.uid())
+    )
+  );
 
 drop policy if exists records_update on public.records;
 create policy records_update on public.records
-  for update using (public.is_member_of(alliance_id));
+  for update using (
+    public.is_member_of(alliance_id)
+    and (
+      public.role_in(alliance_id) in ('owner','admin')
+      or exists (select 1 from public.players p where p.id = player_id and p.user_id = auth.uid())
+    )
+  );
 
 drop policy if exists records_delete on public.records;
 create policy records_delete on public.records
