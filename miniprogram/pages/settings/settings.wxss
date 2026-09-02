@@ -1,1 +1,3 @@
 .pill { font-size: 22rpx; padding: 4rpx 18rpx; border-radius: 20rpx; background: rgba(224,68,60,.15); color: #ff6b5e; border: 1rpx solid rgba(224,68,60,.35); }
+.th-field { margin-bottom: 16rpx; }
+.th-label { color: #c49da1; font-size: 24rpx; margin-bottom: 8rpx; }

@@ -3,10 +3,10 @@
   <view class="card" style="margin-bottom:16rpx;">
     <view class="h3" style="margin-bottom:10rpx;">考核阈值（变化值达标线）</view>
     <view class="muted" style="margin-bottom:12rpx;">达标显示绿色、未达标红色；填 0 表示不启用。</view>
-    <input class="input" type="number" placeholder="武勋增长阈值" value="{{thMerit}}" data-k="Merit" bindinput="onTh" />
-    <input class="input" type="number" placeholder="势力增长阈值" value="{{thPower}}" data-k="Power" bindinput="onTh" />
-    <input class="input" type="number" placeholder="总贡献增长阈值" value="{{thCt}}" data-k="Ct" bindinput="onTh" />
-    <input class="input" type="number" placeholder="周贡献增长阈值" value="{{thCw}}" data-k="Cw" bindinput="onTh" />
+    <view class="th-field"><view class="th-label">武勋增长阈值</view><input class="input" type="number" placeholder="0" value="{{thMerit}}" data-k="Merit" bindinput="onTh" /></view>
+    <view class="th-field"><view class="th-label">势力增长阈值</view><input class="input" type="number" placeholder="0" value="{{thPower}}" data-k="Power" bindinput="onTh" /></view>
+    <view class="th-field"><view class="th-label">总贡献增长阈值</view><input class="input" type="number" placeholder="0" value="{{thCt}}" data-k="Ct" bindinput="onTh" /></view>
+    <view class="th-field"><view class="th-label">周贡献增长阈值</view><input class="input" type="number" placeholder="0" value="{{thCw}}" data-k="Cw" bindinput="onTh" /></view>
     <button class="btn" bindtap="saveThreshold">保存阈值</button>
   </view>
   <view wx:for="{{members}}" wx:key="id" class="card" style="margin-bottom:16rpx;">

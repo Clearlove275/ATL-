@@ -392,7 +392,7 @@
     if (threshold > 0) return Number(delta) >= threshold ? "delta-up" : "delta-down";
     return deltaClass(delta);
   }
-  function getCompareAllRange() {
+  function getCompareRange() {
     const preset = $("comparePreset").value;
     const now = Date.now();
     const all = S.records.map((r) => new Date(r.recorded_at).getTime());
@@ -407,11 +407,48 @@
     }
     return { start: earliest, end: latest };
   }
-  function renderCompareAll() {
-    hide($("compareSnapshots"));
-    show($("compareRange"));
-    $("compareCount").textContent = "";
-    $("compareRecords").innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">已选择「全选」，下方为全体成员在所选时间范围内的变化值（绿色达标 / 红色未达标）。</td></tr>';
+  function compareAgg(p, range) {
+    const recs = recordsOf(p.id);
+    const latest = latestOf(recs);
+    const sv = valueAt(recs, range.start), ev = valueAt(recs, range.end);
+    return {
+      p, count: recs.length,
+      latestMerit: latest ? Number(latest.merit) : 0,
+      latestPower: latest ? Number(latest.power) : 0,
+      latestContribTotal: latest ? Number(latest.contribution_total) : 0,
+      latestContribWeek: latest ? Number(latest.contribution_week) : 0,
+      dMerit: (ev ? Number(ev.merit) : 0) - (sv ? Number(sv.merit) : 0),
+      dPower: (ev ? Number(ev.power) : 0) - (sv ? Number(sv.power) : 0),
+      dContribTotal: (ev ? Number(ev.contribution_total) : 0) - (sv ? Number(sv.contribution_total) : 0),
+      dContribWeek: (ev ? Number(ev.contribution_week) : 0) - (sv ? Number(sv.contribution_week) : 0)
+    };
+  }
+  function compareRowHtml(a, i) {
+    const th = S.active || {};
+    return '<tr>' +
+      '<td>' + (i + 1) + '</td>' +
+      '<td><span class="table-name">' + safe(a.p.game_name) + '</span><br><span class="muted">' + safe(a.p.duty || "—") + '</span></td>' +
+      '<td>' + safe(a.p.team || "—") + '</td>' +
+      '<td class="num">' + fmt(a.latestMerit) + '</td>' +
+      '<td class="num">' + fmt(a.latestPower) + '</td>' +
+      '<td class="num">' + fmt(a.latestContribTotal) + '</td>' +
+      '<td class="num">' + fmt(a.latestContribWeek) + '</td>' +
+      '<td class="' + thresholdClass(a.dMerit, th.threshold_merit || 0) + '">' + signed(a.dMerit) + '</td>' +
+      '<td class="' + thresholdClass(a.dPower, th.threshold_power || 0) + '">' + signed(a.dPower) + '</td>' +
+      '<td class="' + thresholdClass(a.dContribTotal, th.threshold_contrib_total || 0) + '">' + signed(a.dContribTotal) + '</td>' +
+      '<td class="' + thresholdClass(a.dContribWeek, th.threshold_contrib_week || 0) + '">' + signed(a.dContribWeek) + '</td>' +
+      '<td class="num">' + a.count + '</td>' +
+      '</tr>';
+  }
+  function renderCompare() {
+    const sel = $("comparePlayer");
+    const prevId = sel.value;
+    sel.innerHTML = '<option value="all">全选（全部成员）</option>' + S.players.map((p) =>
+      '<option value="' + p.id + '">' + safe(p.game_name) + '</option>'
+    ).join("");
+    if (prevId && (prevId === "all" || S.players.some((p) => p.id === prevId))) sel.value = prevId;
+    else sel.value = "all";
+
     const isCustom = $("comparePreset").value === "custom";
     $("compareCustomRange").classList.toggle("hidden", !isCustom);
     if (isCustom && !$("compareRangeStart").value && S.records.length) {
@@ -419,96 +456,36 @@
       $("compareRangeStart").value = toLocalInput(Math.min.apply(null, times));
       $("compareRangeEnd").value = toLocalInput(Math.max.apply(null, times));
     }
-    const range = getCompareAllRange();
-    const th = S.active || {};
-    const rows = S.players.map((p) => {
-      const recs = recordsOf(p.id);
-      if (!recs.length) return { name: p.game_name, dMerit: 0, dPower: 0, dCt: 0, dCw: 0 };
-      const sv = valueAt(recs, range.start), ev = valueAt(recs, range.end);
-      return { name: p.game_name, dMerit: Number(ev.merit) - Number(sv.merit), dPower: Number(ev.power) - Number(sv.power), dCt: Number(ev.contribution_total) - Number(sv.contribution_total), dCw: Number(ev.contribution_week) - Number(sv.contribution_week) };
-    }).sort((a, b) => (b.dMerit || 0) - (a.dMerit || 0));
+    const range = getCompareRange();
+    const pid = sel.value;
+    const list = pid === "all" ? S.players : S.players.filter((p) => p.id === pid);
+    const aggs = list.map((p) => compareAgg(p, range)).sort((a, b) => b.dMerit - a.dMerit);
+
     const box = $("compareResult");
-    if (!rows.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; return; }
-    box.innerHTML = '<div class="table-wrap"><table><thead><tr><th>#</th><th>玩家</th><th>Δ武勋</th><th>Δ势力值</th><th>Δ贡献总量</th><th>Δ贡献周量</th></tr></thead><tbody>' +
-      rows.map((r, i) => '<tr><td>' + (i + 1) + '</td><td>' + safe(r.name) + '</td>' +
-        '<td class="' + thresholdClass(r.dMerit, th.threshold_merit || 0) + '">' + signed(r.dMerit) + '</td>' +
-        '<td class="' + thresholdClass(r.dPower, th.threshold_power || 0) + '">' + signed(r.dPower) + '</td>' +
-        '<td class="' + thresholdClass(r.dCt, th.threshold_contrib_total || 0) + '">' + signed(r.dCt) + '</td>' +
-        '<td class="' + thresholdClass(r.dCw, th.threshold_contrib_week || 0) + '">' + signed(r.dCw) + '</td>' +
-      '</tr>').join("") +
-      '</tbody></table></div>';
-  }
+    if (!aggs.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; }
+    else {
+      box.innerHTML = '<div class="table-wrap"><table><thead><tr><th>#</th><th>玩家</th><th>团组</th><th>最新武勋</th><th>最新势力值</th><th>最新贡献总量</th><th>最新贡献周量</th><th>Δ武勋</th><th>Δ势力值</th><th>Δ贡献总量</th><th>Δ贡献周量</th><th>记录数</th></tr></thead><tbody>' +
+        aggs.map(compareRowHtml).join("") + '</tbody></table></div>';
+    }
 
-  function renderCompare() {
-    const sel = $("comparePlayer");
-    const prevId = sel.value;
-    sel.innerHTML = '<option value="">请选择玩家</option><option value="all">全选（全部成员）</option>' + S.players.map((p) =>
-      '<option value="' + p.id + '">' + safe(p.game_name) + '</option>'
-    ).join("");
-    if (prevId && S.players.some((p) => p.id === prevId)) sel.value = prevId;
-    renderCompareDetail(sel.value);
-  }
-
-  function renderCompareDetail(pid) {
-    if (pid === "all") { renderCompareAll(); return; }
-    show($("compareSnapshots"));
-    hide($("compareRange"));
-    const startSel = $("compareStart"), endSel = $("compareEnd");
-    const records = pid ? recordsOf(pid) : [];
-    const opt = (r) => '<option value="' + r.id + '">' + fmtTime(r.recorded_at) + ' · 武勋 ' + fmt(r.merit) + ' · 势力 ' + fmt(r.power) + ' · 贡献 ' + fmt(r.contribution_total) + '</option>';
-    startSel.innerHTML = records.map(opt).join("");
-    endSel.innerHTML = records.map(opt).join("");
-    $("compareCount").textContent = records.length + " 条快照";
-    if (records.length) { startSel.value = records[0].id; endSel.value = records[records.length - 1].id; }
-
-    $("compareRecords").innerHTML = records.length ? records.slice().reverse().map((r) =>
-      '<tr>' +
-      '<td>' + fmtTime(r.recorded_at) + '</td>' +
-      '<td class="num">' + fmt(r.merit) + '</td>' +
-      '<td class="num">' + fmt(r.power) + '</td>' +
-      '<td class="num">' + fmt(r.contribution_total) + '</td>' +
-      '<td class="num">' + fmt(r.contribution_week) + '</td>' +
-      '<td>' + (r.source === "ocr" ? "截图识别" : "手动") + '</td>' +
-      '<td>' + safe(r.note || "—") + '</td>' +
-      '<td><button class="link-button danger" data-delrec="' + r.id + '">删除</button></td>' +
-      '</tr>'
-    ).join("") : '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">该玩家还没有任何记录。</td></tr>';
-
-    updateCompareResult();
-  }
-
-  function compareCard(title, time, merit, power, contribTotal, contribWeek) {
-    return '<div class="compare-card"><span>' + title + '</span>' +
-      '<strong>武勋 ' + merit + '</strong>' +
-      '<strong>势力 ' + power + '</strong>' +
-      '<strong>贡献总量 ' + contribTotal + '</strong>' +
-      '<strong>贡献周量 ' + contribWeek + '</strong>' +
-      '<div class="time">' + time + '</div></div>';
-  }
-
-  /* ---------- 变化值结果（供下拉变化事件调用，避免重建选项） ---------- */
-  function updateCompareResult() {
-    const pid = $("comparePlayer").value;
-    if (pid === "all") { renderCompareAll(); return; }
-    const records = pid ? recordsOf(pid) : [];
-    const s = records.find((r) => r.id === $("compareStart").value);
-    const e = records.find((r) => r.id === $("compareEnd").value);
-    if (s && e) {
-      const dM = Number(e.merit) - Number(s.merit);
-      const dP = Number(e.power) - Number(s.power);
-      const dCT = Number(e.contribution_total) - Number(s.contribution_total);
-      const dCW = Number(e.contribution_week) - Number(s.contribution_week);
-      $("compareResult").innerHTML =
-        compareCard("起始快照", fmtTime(s.recorded_at), fmt(s.merit), fmt(s.power), fmt(s.contribution_total), fmt(s.contribution_week)) +
-        compareCard("结束快照", fmtTime(e.recorded_at), fmt(e.merit), fmt(e.power), fmt(e.contribution_total), fmt(e.contribution_week)) +
-        '<div class="compare-card"><span>变化值（结束 − 起始）</span>' +
-        '<strong class="' + deltaClass(dM) + '">武勋 ' + signed(dM) + '</strong>' +
-        '<strong class="' + deltaClass(dP) + '">势力 ' + signed(dP) + '</strong>' +
-        '<strong class="' + deltaClass(dCT) + '">贡献总量 ' + signed(dCT) + '</strong>' +
-        '<strong class="' + deltaClass(dCW) + '">贡献周量 ' + signed(dCW) + '</strong>' +
-        '<div class="time">' + fmtTime(s.recorded_at) + ' → ' + fmtTime(e.recorded_at) + '</div></div>';
+    if (pid !== "all") {
+      const records = recordsOf(pid);
+      $("compareCount").textContent = records.length + " 条快照";
+      $("compareRecords").innerHTML = records.length ? records.slice().reverse().map((r) =>
+        '<tr>' +
+        '<td>' + fmtTime(r.recorded_at) + '</td>' +
+        '<td class="num">' + fmt(r.merit) + '</td>' +
+        '<td class="num">' + fmt(r.power) + '</td>' +
+        '<td class="num">' + fmt(r.contribution_total) + '</td>' +
+        '<td class="num">' + fmt(r.contribution_week) + '</td>' +
+        '<td>' + (r.source === "ocr" ? "截图识别" : "手动") + '</td>' +
+        '<td>' + safe(r.note || "—") + '</td>' +
+        '<td><button class="link-button danger" data-delrec="' + r.id + '">删除</button></td>' +
+        '</tr>'
+      ).join("") : '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">该玩家还没有任何记录。</td></tr>';
     } else {
-      $("compareResult").innerHTML = '<div class="muted" style="padding:10px">请选择玩家与两次快照。</div>';
+      $("compareCount").textContent = "";
+      $("compareRecords").innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">已选择「全选」，上方为全体成员数据。</td></tr>';
     }
   }
 
@@ -1238,12 +1215,10 @@
     $("deltaEnd").addEventListener("change", () => { S.deltaPreset = "custom"; $("deltaPreset").value = "custom"; $("deltaStart").disabled = false; $("deltaEnd").disabled = false; renderRoster(); });
 
     // 变化值对比
-    $("comparePlayer").addEventListener("change", (e) => renderCompareDetail(e.target.value));
-    $("compareStart").addEventListener("change", updateCompareResult);
-    $("compareEnd").addEventListener("change", updateCompareResult);
-    $("compareRangeStart").addEventListener("change", renderCompareAll);
-    $("compareRangeEnd").addEventListener("change", renderCompareAll);
-    $("comparePreset").addEventListener("change", renderCompareAll);
+    $("comparePlayer").addEventListener("change", renderCompare);
+    $("comparePreset").addEventListener("change", renderCompare);
+    $("compareRangeStart").addEventListener("change", renderCompare);
+    $("compareRangeEnd").addEventListener("change", renderCompare);
 
     // 图表与导出
     $("chartMetric").addEventListener("change", renderCharts);

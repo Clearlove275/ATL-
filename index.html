@@ -375,16 +375,12 @@
 
         <!-- 变化值对比 -->
         <section id="compareView" class="tab-view">
-          <div class="section-heading"><div><p class="eyebrow">DELTA</p><h2>任意两次时间的变化值对比</h2><p>选择一名玩家，再选择其历史快照中的「起始」与「结束」两条记录，即可查看武勋与势力值的变化。</p></div></div>
+          <div class="section-heading"><div><p class="eyebrow">DELTA</p><h2>变化值对比</h2><p>选择「全选」查看全体成员，或选择单个玩家；表格与成员数据格式一致，绿色达标、红色未达标。</p></div></div>
           <section class="panel">
             <div class="compare-select">
               <label>选择玩家<select id="comparePlayer"></select></label>
-              <div id="compareSnapshots" class="compare-select">
-                <label>起始快照<select id="compareStart"></select></label>
-                <span class="muted">→</span>
-                <label>结束快照<select id="compareEnd"></select></label>
-              </div>
-              <div id="compareRange" class="compare-tools hidden">
+              
+              <div id="compareRange" class="compare-tools">
                 <div class="compare-select">
                   <label>时间范围<select id="comparePreset"><option value="1d">前一天</option><option value="7d">近7天</option><option value="30d">近30天</option><option value="season">全赛季</option><option value="custom">自定义</option></select></label>
                   </div>
