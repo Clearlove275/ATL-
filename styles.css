@@ -392,6 +392,5 @@ td.num { font-variant-numeric: tabular-nums; }
 .social-btns { display: flex; gap: 12px; }
 .social-btn { flex: 1; }
 
-.compare-table { table-layout: fixed; }
-.compare-table th, .compare-table td { padding: 14px 18px; font-size: 15px; overflow: hidden; }
-.compare-table .table-name, .compare-table .muted { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compare-table th, .compare-table td { padding: 14px 18px; font-size: 15px; white-space: normal; }
+.compare-table .table-name, .compare-table .muted { display: block; }
