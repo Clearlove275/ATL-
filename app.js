@@ -348,7 +348,7 @@
     $("rosterBody").innerHTML = aggs.length ? aggs.map((a, i) =>
       '<tr>' +
       '<td>' + (i + 1) + '</td>' +
-      '<td><span class="table-name">' + safe(a.p.game_name) + '</span>' + (a.p.user_id === myUserId() ? '<span class="pill me">我</span>' : '') + '<br><span class="muted">' + safe(a.p.duty || "—") + '</span></td>' +
+      '<td><span class="table-name">' + safe(a.p.game_name) + '</span>' + (a.p.user_id === myUserId() ? '<span class="pill me">我</span>' : '') + (a.p.duty ? '<br><span class="muted">' + safe(a.p.duty) + '</span>' : '') + '</td>' +
       '<td>' + safe(a.p.team || "—") + '</td>' +
       '<td class="num">' + fmt(a.latestMerit) + '</td>' +
       '<td class="num">' + fmt(a.latestPower) + '</td>' +
@@ -427,7 +427,7 @@
     const th = S.active || {};
     return '<tr>' +
       '<td>' + (i + 1) + '</td>' +
-      '<td><span class="table-name">' + safe(a.p.game_name) + '</span><br><span class="muted">' + safe(a.p.duty || "—") + '</span></td>' +
+      '<td><span class="table-name">' + safe(a.p.game_name) + '</span>' + (a.p.duty ? '<br><span class="muted">' + safe(a.p.duty) + '</span>' : '') + '</td>' +
       '<td class="' + thresholdClass(a.dMerit, th.threshold_merit || 0) + '">' + signed(a.dMerit) + '</td>' +
       '<td class="' + thresholdClass(a.dPower, th.threshold_power || 0) + '">' + signed(a.dPower) + '</td>' +
       '<td class="' + thresholdClass(a.dContribTotal, th.threshold_contrib_total || 0) + '">' + signed(a.dContribTotal) + '</td>' +
