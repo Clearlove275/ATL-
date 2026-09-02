@@ -429,7 +429,7 @@
     }).sort((a, b) => (b.dMerit || 0) - (a.dMerit || 0));
     const box = $("compareResult");
     if (!rows.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; return; }
-    box.innerHTML = '<div class="table-wrap"><table><thead><tr><th>排名</th><th>玩家</th><th>Δ武勋</th><th>Δ势力</th><th>Δ总贡献</th><th>Δ周贡献</th></tr></thead><tbody>' +
+    box.innerHTML = '<div class="table-wrap"><table><thead><tr><th>#</th><th>玩家</th><th>Δ武勋</th><th>Δ势力值</th><th>Δ贡献总量</th><th>Δ贡献周量</th></tr></thead><tbody>' +
       rows.map((r, i) => '<tr><td>' + (i + 1) + '</td><td>' + safe(r.name) + '</td>' +
         '<td class="' + thresholdClass(r.dMerit, th.threshold_merit || 0) + '">' + signed(r.dMerit) + '</td>' +
         '<td class="' + thresholdClass(r.dPower, th.threshold_power || 0) + '">' + signed(r.dPower) + '</td>' +

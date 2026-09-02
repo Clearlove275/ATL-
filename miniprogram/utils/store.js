@@ -3,9 +3,11 @@ const cfg = require('./config');
 async function getUserId() { const u = await client.auth.getUser(); return u ? u.id : null; }
 
 const alliances = {
-  async list() { const u = await getUserId(); if (!u) return []; const rows = await client.request('GET', '/rest/v1/alliance_members?select=role,alliances(id,name,season,invite_code)&user_id=eq.' + u); return (rows || []).map(r => ({ id: r.alliances && r.alliances.id, name: r.alliances && r.alliances.name, season: r.alliances && r.alliances.season, invite_code: r.alliances && r.alliances.invite_code, role: r.role })); },
+  async list() { const u = await getUserId(); if (!u) return []; const rows = await client.request('GET', '/rest/v1/alliance_members?select=role,alliances(id,name,season,invite_code,threshold_merit,threshold_power,threshold_contrib_total,threshold_contrib_week)&user_id=eq.' + u); return (rows || []).map(r => ({ id: r.alliances && r.alliances.id, name: r.alliances && r.alliances.name, season: r.alliances && r.alliances.season, invite_code: r.alliances && r.alliances.invite_code, threshold_merit: (r.alliances && r.alliances.threshold_merit) || 0, threshold_power: (r.alliances && r.alliances.threshold_power) || 0, threshold_contrib_total: (r.alliances && r.alliances.threshold_contrib_total) || 0, threshold_contrib_week: (r.alliances && r.alliances.threshold_contrib_week) || 0, role: r.role })); },
+  async get(aid) { const rows = await client.request('GET', '/rest/v1/alliances?select=*&id=eq.' + aid); return rows && rows[0]; },
   async create(name, season, gameName) { return await client.request('POST', '/rest/v1/rpc/create_alliance', { p_name: name, p_season: season || '', p_game_name: gameName || '' }); },
-  async join(code, gameName) { return await client.request('POST', '/rest/v1/rpc/join_alliance', { p_invite_code: code, p_game_name: gameName || '' }); }
+  async join(code, gameName) { return await client.request('POST', '/rest/v1/rpc/join_alliance', { p_invite_code: code, p_game_name: gameName || '' }); },
+  async update(id, patch) { return await client.request('PATCH', '/rest/v1/alliances?id=eq.' + id, patch); }
 };
 const players = {
   async list(aid) { return await client.request('GET', '/rest/v1/players?alliance_id=eq.' + aid + '&order=created_at.asc'); },

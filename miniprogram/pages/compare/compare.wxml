@@ -6,21 +6,30 @@
   <block wx:if="{{mode==='all'}}">
     <view class="card" style="margin-bottom:20rpx;">
       <view class="h3" style="margin-bottom:16rpx;">时间范围</view>
-      <view class="muted">起始</view>
-      <view class="row">
-        <picker mode="date" value="{{startDate}}" bindchange="onStartDate"><view class="input grow">{{startDate || '选择日期'}}</view></picker>
-        <picker mode="time" value="{{startTime}}" bindchange="onStartTime"><view class="input grow">{{startTime}}</view></picker>
-      </view>
-      <view class="muted">结束</view>
-      <view class="row">
-        <picker mode="date" value="{{endDate}}" bindchange="onEndDate"><view class="input grow">{{endDate || '选择日期'}}</view></picker>
-        <picker mode="time" value="{{endTime}}" bindchange="onEndTime"><view class="input grow">{{endTime}}</view></picker>
-      </view>
+      <picker range="{{presets}}" bindchange="onPreset"><view class="input">{{presets[preset==='1d'?0:(preset==='7d'?1:(preset==='30d'?2:(preset==='season'?3:4)))]}}</view></picker>
+      <block wx:if="{{preset==='custom'}}">
+        <view class="muted">起始</view>
+        <view class="row">
+          <picker mode="date" value="{{startDate}}" bindchange="onStartDate"><view class="input grow">{{startDate || '选择日期'}}</view></picker>
+          <picker mode="time" value="{{startTime}}" bindchange="onStartTime"><view class="input grow">{{startTime}}</view></picker>
+        </view>
+        <view class="muted">结束</view>
+        <view class="row">
+          <picker mode="date" value="{{endDate}}" bindchange="onEndDate"><view class="input grow">{{endDate || '选择日期'}}</view></picker>
+          <picker mode="time" value="{{endTime}}" bindchange="onEndTime"><view class="input grow">{{endTime}}</view></picker>
+        </view>
+      </block>
     </view>
     <view class="card">
-      <view class="h3" style="margin-bottom:16rpx;">全体成员变化值</view>
-      <view class="arow th"><view class="grow">玩家</view><view class="av">Δ武勋</view><view class="av">Δ势力</view><view class="av">Δ总贡献</view><view class="av">Δ周贡献</view></view>
-      <view class="arow" wx:for="{{allList}}" wx:key="index"><view class="grow">{{item.name}}</view><view class="av">{{item.dMerit}}</view><view class="av">{{item.dPower}}</view><view class="av">{{item.dCt}}</view><view class="av">{{item.dCw}}</view></view>
+      <view class="h3" style="margin-bottom:16rpx;">全体成员变化值（绿色达标 / 红色未达标）</view>
+      <view class="arow th"><view class="grow">玩家</view><view class="av">Δ武勋</view><view class="av">Δ势力值</view><view class="av">Δ贡献总量</view><view class="av">Δ贡献周量</view></view>
+      <view class="arow" wx:for="{{allList}}" wx:key="index">
+        <view class="grow">{{item.name}}</view>
+        <view class="av {{item.cMerit==='up'?'green':(item.cMerit==='down'?'red':'')}}">{{item.dMerit}}</view>
+        <view class="av {{item.cPower==='up'?'green':(item.cPower==='down'?'red':'')}}">{{item.dPower}}</view>
+        <view class="av {{item.cCt==='up'?'green':(item.cCt==='down'?'red':'')}}">{{item.dCt}}</view>
+        <view class="av {{item.cCw==='up'?'green':(item.cCw==='down'?'red':'')}}">{{item.dCw}}</view>
+      </view>
       <view wx:if="{{allList.length===0}}" class="muted" style="text-align:center;padding:30rpx;">暂无数据</view>
     </view>
   </block>

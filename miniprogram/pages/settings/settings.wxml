@@ -1,5 +1,14 @@
 <view style="padding:24rpx;">
   <view class="muted" style="margin-bottom:16rpx;">当前身份：{{myRole==='owner'?'盟主':(myRole==='admin'?'管理':'成员')}} · 共 {{members.length}} 名成员</view>
+  <view class="card" style="margin-bottom:16rpx;">
+    <view class="h3" style="margin-bottom:10rpx;">考核阈值（变化值达标线）</view>
+    <view class="muted" style="margin-bottom:12rpx;">达标显示绿色、未达标红色；填 0 表示不启用。</view>
+    <input class="input" type="number" placeholder="武勋增长阈值" value="{{thMerit}}" data-k="Merit" bindinput="onTh" />
+    <input class="input" type="number" placeholder="势力增长阈值" value="{{thPower}}" data-k="Power" bindinput="onTh" />
+    <input class="input" type="number" placeholder="总贡献增长阈值" value="{{thCt}}" data-k="Ct" bindinput="onTh" />
+    <input class="input" type="number" placeholder="周贡献增长阈值" value="{{thCw}}" data-k="Cw" bindinput="onTh" />
+    <button class="btn" bindtap="saveThreshold">保存阈值</button>
+  </view>
   <view wx:for="{{members}}" wx:key="id" class="card" style="margin-bottom:16rpx;">
     <view class="row"><view class="h3 grow">{{item.game_name || item.user_id}}</view><view class="pill">{{item.roleName}}</view></view>
     <view class="row" style="margin-top:14rpx;" wx:if="{{canManage && item.role!=='owner'}}">
