@@ -458,8 +458,8 @@
     const box = $("compareResult");
     if (!aggs.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; }
     else {
-      box.innerHTML = '<div class="table-wrap"><table><thead><tr><th>#</th><th>玩家</th><th>Δ武勋</th><th>Δ势力值</th><th>Δ贡献总量</th><th>Δ贡献周量</th></tr></thead><tbody>' +
-        aggs.map(compareRowHtml).join("") + '</tbody></table></div>';
+      box.innerHTML = '<table class="compare-table"><thead><tr><th style="width:8%">#</th><th style="width:32%">玩家</th><th style="width:15%">Δ武勋</th><th style="width:15%">Δ势力值</th><th style="width:15%">Δ贡献总量</th><th style="width:15%">Δ贡献周量</th></tr></thead><tbody>' +
+        aggs.map(compareRowHtml).join("") + '</tbody></table>';
     }
 
     if (pid !== "all") {
