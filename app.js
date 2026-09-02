@@ -352,10 +352,10 @@
       '<td class="num">' + fmt(a.latestPower) + '</td>' +
       '<td class="num">' + fmt(a.latestContribTotal) + '</td>' +
       '<td class="num">' + fmt(a.latestContribWeek) + '</td>' +
-      '<td class="' + deltaClass(a.dMerit) + '">' + signed(a.dMerit) + '</td>' +
-      '<td class="' + deltaClass(a.dPower) + '">' + signed(a.dPower) + '</td>' +
-      '<td class="' + deltaClass(a.dContribTotal) + '">' + signed(a.dContribTotal) + '</td>' +
-      '<td class="' + deltaClass(a.dContribWeek) + '">' + signed(a.dContribWeek) + '</td>' +
+      '<td class="' + thresholdClass(a.dMerit, (S.active && S.active.threshold_merit) || 0) + '">' + signed(a.dMerit) + '</td>' +
+      '<td class="' + thresholdClass(a.dPower, (S.active && S.active.threshold_power) || 0) + '">' + signed(a.dPower) + '</td>' +
+      '<td class="' + thresholdClass(a.dContribTotal, (S.active && S.active.threshold_contrib_total) || 0) + '">' + signed(a.dContribTotal) + '</td>' +
+      '<td class="' + thresholdClass(a.dContribWeek, (S.active && S.active.threshold_contrib_week) || 0) + '">' + signed(a.dContribWeek) + '</td>' +
       '<td class="num">' + a.count + '</td>' +
       '<td>' +
         '<button class="link-button" data-addrec="' + a.p.id + '">录入</button>' +
@@ -386,30 +386,74 @@
   }
 
   /* ---------- 变化值对比 ---------- */
+  function thresholdClass(delta, threshold) {
+    if (threshold > 0) return Number(delta) >= threshold ? "delta-up" : "delta-down";
+    return deltaClass(delta);
+  }
+  function getCompareAllRange() {
+    const preset = $("comparePreset").value;
+    const now = Date.now();
+    const all = S.records.map((r) => new Date(r.recorded_at).getTime());
+    const earliest = all.length ? Math.min.apply(null, all) : now;
+    const latest = all.length ? Math.max.apply(null, all) : now;
+    if (preset === "1d") return { start: now - 86400000, end: now };
+    if (preset === "7d") return { start: now - 7 * 86400000, end: now };
+    if (preset === "30d") return { start: now - 30 * 86400000, end: now };
+    if (preset === "custom") {
+      const s = $("compareRangeStart").value, e = $("compareRangeEnd").value;
+      return { start: s ? new Date(s).getTime() : earliest, end: e ? new Date(e).getTime() : latest };
+    }
+    return { start: earliest, end: latest };
+  }
+  function renderCompareAllChart(rows, key, label, threshold) {
+    destroyChart("compareAll");
+    if (!window.Chart) return;
+    const colors = rows.map((r) => {
+      const v = Number(r[key]) || 0;
+      if (threshold > 0) return v >= threshold ? "#3ecf8e" : "#ff4d42";
+      return v >= 0 ? "#ff6b5e" : "#e07a6f";
+    });
+    chartInstances.compareAll = new window.Chart($("compareAllChart"), {
+      type: "bar",
+      data: { labels: rows.map((r) => r.name), datasets: [{ label: label, data: rows.map((r) => Number(r[key]) || 0), backgroundColor: colors, borderRadius: 4 }] },
+      options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: "#c49da1" } }, y: { ticks: { color: "#c49da1", autoSkip: false } } } }
+    });
+  }
   function renderCompareAll() {
     hide($("compareSnapshots"));
     show($("compareRange"));
     $("compareCount").textContent = "";
-    $("compareRecords").innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">已选择「全选」，请在下方选择时间范围查看全体成员变化值。</td></tr>';
-    if (!$("compareRangeStart").value && S.records.length) {
+    $("compareRecords").innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">已选择「全选」，下方图表与表格为全体成员在所选时间范围内的变化值（绿色达标 / 红色未达标）。</td></tr>';
+    const isCustom = $("comparePreset").value === "custom";
+    $("compareCustomRange").classList.toggle("hidden", !isCustom);
+    if (isCustom && !$("compareRangeStart").value && S.records.length) {
       const times = S.records.map((r) => new Date(r.recorded_at).getTime());
       $("compareRangeStart").value = toLocalInput(Math.min.apply(null, times));
       $("compareRangeEnd").value = toLocalInput(Math.max.apply(null, times));
     }
-    const startMs = $("compareRangeStart").value ? new Date($("compareRangeStart").value).getTime() : null;
-    const endMs = $("compareRangeEnd").value ? new Date($("compareRangeEnd").value).getTime() : null;
+    const range = getCompareAllRange();
+    const metric = $("compareAllMetric").value;
+    const keyMap = { merit: "dMerit", power: "dPower", ct: "dCt", cw: "dCw" };
+    const labelMap = { merit: "Δ武勋", power: "Δ势力", ct: "Δ总贡献", cw: "Δ周贡献" };
+    const th = S.active || {};
+    const thMap = { merit: th.threshold_merit || 0, power: th.threshold_power || 0, ct: th.threshold_contrib_total || 0, cw: th.threshold_contrib_week || 0 };
     const rows = S.players.map((p) => {
       const recs = recordsOf(p.id);
       if (!recs.length) return { name: p.game_name, dMerit: 0, dPower: 0, dCt: 0, dCw: 0 };
-      const sv = startMs ? valueAt(recs, startMs) : recs[0];
-      const ev = endMs ? valueAt(recs, endMs) : recs[recs.length - 1];
+      const sv = valueAt(recs, range.start), ev = valueAt(recs, range.end);
       return { name: p.game_name, dMerit: Number(ev.merit) - Number(sv.merit), dPower: Number(ev.power) - Number(sv.power), dCt: Number(ev.contribution_total) - Number(sv.contribution_total), dCw: Number(ev.contribution_week) - Number(sv.contribution_week) };
-    }).sort((a, b) => b.dMerit - a.dMerit);
+    }).sort((a, b) => (b[keyMap[metric]] || 0) - (a[keyMap[metric]] || 0));
     const box = $("compareResult");
-    if (!rows.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; return; }
+    if (!rows.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; destroyChart("compareAll"); return; }
     box.innerHTML = '<div class="table-wrap"><table><thead><tr><th>排名</th><th>玩家</th><th>Δ武勋</th><th>Δ势力</th><th>Δ总贡献</th><th>Δ周贡献</th></tr></thead><tbody>' +
-      rows.map((a, i) => '<tr><td>' + (i + 1) + '</td><td>' + safe(a.name) + '</td><td class="' + deltaClass(a.dMerit) + '">' + signed(a.dMerit) + '</td><td class="' + deltaClass(a.dPower) + '">' + signed(a.dPower) + '</td><td class="' + deltaClass(a.dCt) + '">' + signed(a.dCt) + '</td><td class="' + deltaClass(a.dCw) + '">' + signed(a.dCw) + '</td></tr>').join("") +
+      rows.map((r, i) => '<tr><td>' + (i + 1) + '</td><td>' + safe(r.name) + '</td>' +
+        '<td class="' + thresholdClass(r.dMerit, th.threshold_merit || 0) + '">' + signed(r.dMerit) + '</td>' +
+        '<td class="' + thresholdClass(r.dPower, th.threshold_power || 0) + '">' + signed(r.dPower) + '</td>' +
+        '<td class="' + thresholdClass(r.dCt, th.threshold_contrib_total || 0) + '">' + signed(r.dCt) + '</td>' +
+        '<td class="' + thresholdClass(r.dCw, th.threshold_contrib_week || 0) + '">' + signed(r.dCw) + '</td>' +
+      '</tr>').join("") +
       '</tbody></table></div>';
+    renderCompareAllChart(rows, keyMap[metric], labelMap[metric], thMap[metric]);
   }
 
   function renderCompare() {
@@ -638,6 +682,10 @@
     $("settingsName").value = S.active.name || "";
     $("settingsSeason").value = S.active.season || "";
     $("settingsInvite").value = S.active.invite_code || "";
+    $("thMerit").value = S.active.threshold_merit || 0;
+    $("thPower").value = S.active.threshold_power || 0;
+    $("thContribTotal").value = S.active.threshold_contrib_total || 0;
+    $("thContribWeek").value = S.active.threshold_contrib_week || 0;
 
     const canManage = S.myRole === "owner" || S.myRole === "admin";
     $("memberManage").innerHTML = S.members.length ? S.members.map((m) => {
@@ -884,9 +932,6 @@
     if (!v.src || !videoUrl) return;
     const cfg = window.APP_CONFIG || {};
     if (!cfg.visionBackendUrl) { $("videoStatus").textContent = "未配置视觉识别后端，请改用截图识别。"; return; }
-    const interval = Math.max(0.5, Number($("videoInterval").value) || 2);
-    const maxFrames = Math.min(40, Math.max(2, Math.round(Number($("videoMaxFrames").value) || 14)));
-
     let duration = 0;
     try {
       duration = await new Promise((res, rej) => {
@@ -898,8 +943,8 @@
     } catch (e) { $("videoStatus").textContent = "视频加载失败：" + e.message; return; }
     if (!duration || !isFinite(duration)) { $("videoStatus").textContent = "无法读取视频时长，请更换视频。"; return; }
 
-    const count = Math.max(2, Math.min(maxFrames, Math.floor(duration / interval)));
-    const times = Array.from({ length: count }, (_, i) => Math.min(duration - 0.05, interval * (i + 0.5)));
+    const count = Math.min(24, Math.max(2, Math.round(duration / 2)));
+    const times = Array.from({ length: count }, (_, i) => Math.min(duration - 0.05, (duration / count) * (i + 0.5)));
 
     const btn = $("runVideoOcr");
     btn.disabled = true;
@@ -1215,6 +1260,8 @@
     $("compareEnd").addEventListener("change", updateCompareResult);
     $("compareRangeStart").addEventListener("change", renderCompareAll);
     $("compareRangeEnd").addEventListener("change", renderCompareAll);
+    $("comparePreset").addEventListener("change", renderCompareAll);
+    $("compareAllMetric").addEventListener("change", renderCompareAll);
 
     // 图表与导出
     $("chartMetric").addEventListener("change", renderCharts);
@@ -1239,6 +1286,19 @@
         refreshAlliances();
       } catch (err) { toast("保存失败：" + err.message); }
     });
+    $("saveThresholdBtn").onclick = async () => {
+      const patch = {
+        threshold_merit: Number($("thMerit").value) || 0,
+        threshold_power: Number($("thPower").value) || 0,
+        threshold_contrib_total: Number($("thContribTotal").value) || 0,
+        threshold_contrib_week: Number($("thContribWeek").value) || 0
+      };
+      try {
+        await Store.alliances.update(S.active.id, patch);
+        Object.assign(S.active, patch);
+        toast("阈值已保存");
+      } catch (e) { toast("保存失败：" + e.message); }
+    };
     $("copyInvite").onclick = () => {
       const v = $("settingsInvite").value;
       if (navigator.clipboard && navigator.clipboard.writeText) {

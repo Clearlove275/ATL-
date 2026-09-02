@@ -294,13 +294,11 @@
           </div>
           <section class="panel" style="margin-top:16px">
             <div class="panel-title"><div><p class="eyebrow">VIDEO OCR</p><h3>视频识别 · 录屏批量导入</h3></div></div>
-            <p class="muted">上传玩家数据的录屏（建议缓慢滚动成员列表，确保每行完整出现），系统会自动抽帧识别并合并成成员列表。</p>
+            <p class="muted">上传玩家数据的录屏（建议缓慢滚动成员列表，确保每行完整出现），系统会自动均匀抽帧识别并合并成成员列表，无需手动设置参数。</p>
             <div class="video-tools">
               <input id="videoInput" type="file" accept="video/*" hidden />
               <button id="chooseVideo" class="secondary">选择视频</button>
-              <label class="inline">采样间隔 <input id="videoInterval" type="number" value="2" min="0.5" max="10" step="0.5" /> 秒</label>
-              <label class="inline">最大帧数 <input id="videoMaxFrames" type="number" value="14" min="2" max="40" step="1" /></label>
-              <button id="runVideoOcr" class="primary" disabled>开始识别视频</button>
+                        <button id="runVideoOcr" class="primary" disabled>开始识别视频</button>
             </div>
             <video id="videoPreview" class="preview hidden" muted playsinline preload="auto"></video>
             <div id="videoStatus" class="ocr-status">尚未选择视频</div>
@@ -385,10 +383,17 @@
                 <span class="muted">→</span>
                 <label>结束快照<select id="compareEnd"></select></label>
               </div>
-              <div id="compareRange" class="compare-select hidden">
-                <label>起始时间<input id="compareRangeStart" type="datetime-local" /></label>
-                <span class="muted">→</span>
-                <label>结束时间<input id="compareRangeEnd" type="datetime-local" /></label>
+              <div id="compareRange" class="compare-tools hidden">
+                <div class="compare-select">
+                  <label>时间范围<select id="comparePreset"><option value="1d">前一天</option><option value="7d">近7天</option><option value="30d">近30天</option><option value="season">全赛季</option><option value="custom">自定义</option></select></label>
+                  <label>图表指标<select id="compareAllMetric"><option value="merit">Δ武勋</option><option value="power">Δ势力</option><option value="ct">Δ总贡献</option><option value="cw">Δ周贡献</option></select></label>
+                </div>
+                <div id="compareCustomRange" class="compare-select hidden">
+                  <label>起始时间<input id="compareRangeStart" type="datetime-local" /></label>
+                  <span class="muted">→</span>
+                  <label>结束时间<input id="compareRangeEnd" type="datetime-local" /></label>
+                </div>
+                <div class="chart-wrap" style="height:380px;"><canvas id="compareAllChart"></canvas></div>
               </div>
             </div>
             <div id="compareResult" class="compare-result"></div>
@@ -438,6 +443,17 @@
               <div id="memberManage" class="member-manage"></div>
             </section>
           </div>
+          <section class="panel">
+            <div class="panel-title"><h3>考核阈值（变化值达标线）</h3></div>
+            <p class="muted">设置各项“增长值”达标线（例如武勋增长 20000）。达标显示绿色，未达标显示红色；填 0 表示不启用该阈值。</p>
+            <div class="form-grid">
+              <label>武勋增长阈值<input id="thMerit" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></label>
+              <label>势力增长阈值<input id="thPower" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></label>
+              <label>总贡献增长阈值<input id="thContribTotal" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></label>
+              <label>周贡献增长阈值<input id="thContribWeek" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></label>
+              <div class="wide form-footer"><span></span><button type="button" id="saveThresholdBtn" class="primary">保存阈值</button></div>
+            </div>
+          </section>
           <section class="panel danger-panel">
             <div class="panel-title"><h3>危险操作</h3></div>
             <button id="leaveAllianceBtn" class="danger">退出同盟</button>

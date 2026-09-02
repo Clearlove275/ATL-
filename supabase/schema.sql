@@ -18,6 +18,10 @@ create table if not exists public.alliances (
   name text not null,
   season text not null default '未命名赛季',
   invite_code text not null unique,
+  threshold_merit bigint not null default 0,
+  threshold_power bigint not null default 0,
+  threshold_contrib_total bigint not null default 0,
+  threshold_contrib_week bigint not null default 0,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now()
 );

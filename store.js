@@ -81,6 +81,7 @@
         const alliance = {
           id: uid(), name: name.trim(), season: season.trim() || "未命名赛季",
           invite_code: uid().replace(/-/g, "").slice(0, 8).toUpperCase(),
+          threshold_merit: 0, threshold_power: 0, threshold_contrib_total: 0, threshold_contrib_week: 0,
           created_by: LOCAL_USER.id, created_at: nowIso()
         };
         state.alliances.push(alliance);
@@ -109,6 +110,10 @@
         if (!a) return null;
         if (patch.name != null) a.name = patch.name;
         if (patch.season != null) a.season = patch.season;
+        if (patch.threshold_merit != null) a.threshold_merit = Number(patch.threshold_merit) || 0;
+        if (patch.threshold_power != null) a.threshold_power = Number(patch.threshold_power) || 0;
+        if (patch.threshold_contrib_total != null) a.threshold_contrib_total = Number(patch.threshold_contrib_total) || 0;
+        if (patch.threshold_contrib_week != null) a.threshold_contrib_week = Number(patch.threshold_contrib_week) || 0;
         save();
         return a;
       },
