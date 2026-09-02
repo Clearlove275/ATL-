@@ -428,16 +428,10 @@
     return '<tr>' +
       '<td>' + (i + 1) + '</td>' +
       '<td><span class="table-name">' + safe(a.p.game_name) + '</span><br><span class="muted">' + safe(a.p.duty || "—") + '</span></td>' +
-      '<td>' + safe(a.p.team || "—") + '</td>' +
-      '<td class="num">' + fmt(a.latestMerit) + '</td>' +
-      '<td class="num">' + fmt(a.latestPower) + '</td>' +
-      '<td class="num">' + fmt(a.latestContribTotal) + '</td>' +
-      '<td class="num">' + fmt(a.latestContribWeek) + '</td>' +
       '<td class="' + thresholdClass(a.dMerit, th.threshold_merit || 0) + '">' + signed(a.dMerit) + '</td>' +
       '<td class="' + thresholdClass(a.dPower, th.threshold_power || 0) + '">' + signed(a.dPower) + '</td>' +
       '<td class="' + thresholdClass(a.dContribTotal, th.threshold_contrib_total || 0) + '">' + signed(a.dContribTotal) + '</td>' +
       '<td class="' + thresholdClass(a.dContribWeek, th.threshold_contrib_week || 0) + '">' + signed(a.dContribWeek) + '</td>' +
-      '<td class="num">' + a.count + '</td>' +
       '</tr>';
   }
   function renderCompare() {
@@ -464,7 +458,7 @@
     const box = $("compareResult");
     if (!aggs.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; }
     else {
-      box.innerHTML = '<div class="table-wrap"><table><thead><tr><th>#</th><th>玩家</th><th>团组</th><th>最新武勋</th><th>最新势力值</th><th>最新贡献总量</th><th>最新贡献周量</th><th>Δ武勋</th><th>Δ势力值</th><th>Δ贡献总量</th><th>Δ贡献周量</th><th>记录数</th></tr></thead><tbody>' +
+      box.innerHTML = '<div class="table-wrap"><table><thead><tr><th>#</th><th>玩家</th><th>Δ武勋</th><th>Δ势力值</th><th>Δ贡献总量</th><th>Δ贡献周量</th></tr></thead><tbody>' +
         aggs.map(compareRowHtml).join("") + '</tbody></table></div>';
     }
 
