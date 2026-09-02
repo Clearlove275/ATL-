@@ -392,7 +392,8 @@ td.num { font-variant-numeric: tabular-nums; }
 .social-btn { flex: 1; }
 
 .compare-table { width: 100%; }
-.compare-table th, .compare-table td { padding: 14px 18px; font-size: 15px; }
+.compare-table th, .compare-table td { padding: 14px 18px; font-size: 15px; border-bottom: none; }
 .compare-table th { white-space: nowrap; }
 .compare-table td { white-space: normal; }
+.compare-table td:nth-child(2) { text-align: center; }
 .compare-table .table-name, .compare-table .muted { display: block; }
