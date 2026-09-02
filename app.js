@@ -151,7 +151,8 @@
     if (!a) return;
     S.active = a;
     S.myRole = a.role;
-    S.deltaPreset = "season";
+    S.deltaPreset = "1d";
+    if ($("deltaPreset")) $("deltaPreset").value = "1d";
     S.sortKey = "latest_merit";
     S.sortDir = "desc";
     S.preselectPlayer = null;
@@ -221,6 +222,7 @@
     const times = all.map((r) => new Date(r.recorded_at).getTime());
     const earliest = Math.min.apply(null, times);
     const latest = Math.max.apply(null, times);
+    if (S.deltaPreset === "1d") return { start: Date.now() - 86400000, end: Date.now() };
     if (S.deltaPreset === "7d") return { start: Date.now() - 7 * 86400000, end: Date.now() };
     if (S.deltaPreset === "30d") return { start: Date.now() - 30 * 86400000, end: Date.now() };
     if (S.deltaPreset === "custom") {
@@ -405,25 +407,11 @@
     }
     return { start: earliest, end: latest };
   }
-  function renderCompareAllChart(rows, key, label, threshold) {
-    destroyChart("compareAll");
-    if (!window.Chart) return;
-    const colors = rows.map((r) => {
-      const v = Number(r[key]) || 0;
-      if (threshold > 0) return v >= threshold ? "#3ecf8e" : "#ff4d42";
-      return v >= 0 ? "#ff6b5e" : "#e07a6f";
-    });
-    chartInstances.compareAll = new window.Chart($("compareAllChart"), {
-      type: "bar",
-      data: { labels: rows.map((r) => r.name), datasets: [{ label: label, data: rows.map((r) => Number(r[key]) || 0), backgroundColor: colors, borderRadius: 4 }] },
-      options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: "#c49da1" } }, y: { ticks: { color: "#c49da1", autoSkip: false } } } }
-    });
-  }
   function renderCompareAll() {
     hide($("compareSnapshots"));
     show($("compareRange"));
     $("compareCount").textContent = "";
-    $("compareRecords").innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">已选择「全选」，下方图表与表格为全体成员在所选时间范围内的变化值（绿色达标 / 红色未达标）。</td></tr>';
+    $("compareRecords").innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">已选择「全选」，下方为全体成员在所选时间范围内的变化值（绿色达标 / 红色未达标）。</td></tr>';
     const isCustom = $("comparePreset").value === "custom";
     $("compareCustomRange").classList.toggle("hidden", !isCustom);
     if (isCustom && !$("compareRangeStart").value && S.records.length) {
@@ -432,19 +420,15 @@
       $("compareRangeEnd").value = toLocalInput(Math.max.apply(null, times));
     }
     const range = getCompareAllRange();
-    const metric = $("compareAllMetric").value;
-    const keyMap = { merit: "dMerit", power: "dPower", ct: "dCt", cw: "dCw" };
-    const labelMap = { merit: "Δ武勋", power: "Δ势力", ct: "Δ总贡献", cw: "Δ周贡献" };
     const th = S.active || {};
-    const thMap = { merit: th.threshold_merit || 0, power: th.threshold_power || 0, ct: th.threshold_contrib_total || 0, cw: th.threshold_contrib_week || 0 };
     const rows = S.players.map((p) => {
       const recs = recordsOf(p.id);
       if (!recs.length) return { name: p.game_name, dMerit: 0, dPower: 0, dCt: 0, dCw: 0 };
       const sv = valueAt(recs, range.start), ev = valueAt(recs, range.end);
       return { name: p.game_name, dMerit: Number(ev.merit) - Number(sv.merit), dPower: Number(ev.power) - Number(sv.power), dCt: Number(ev.contribution_total) - Number(sv.contribution_total), dCw: Number(ev.contribution_week) - Number(sv.contribution_week) };
-    }).sort((a, b) => (b[keyMap[metric]] || 0) - (a[keyMap[metric]] || 0));
+    }).sort((a, b) => (b.dMerit || 0) - (a.dMerit || 0));
     const box = $("compareResult");
-    if (!rows.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; destroyChart("compareAll"); return; }
+    if (!rows.length) { box.innerHTML = '<div class="muted" style="padding:10px">暂无数据</div>'; return; }
     box.innerHTML = '<div class="table-wrap"><table><thead><tr><th>排名</th><th>玩家</th><th>Δ武勋</th><th>Δ势力</th><th>Δ总贡献</th><th>Δ周贡献</th></tr></thead><tbody>' +
       rows.map((r, i) => '<tr><td>' + (i + 1) + '</td><td>' + safe(r.name) + '</td>' +
         '<td class="' + thresholdClass(r.dMerit, th.threshold_merit || 0) + '">' + signed(r.dMerit) + '</td>' +
@@ -453,7 +437,6 @@
         '<td class="' + thresholdClass(r.dCw, th.threshold_contrib_week || 0) + '">' + signed(r.dCw) + '</td>' +
       '</tr>').join("") +
       '</tbody></table></div>';
-    renderCompareAllChart(rows, keyMap[metric], labelMap[metric], thMap[metric]);
   }
 
   function renderCompare() {
@@ -1261,7 +1244,6 @@
     $("compareRangeStart").addEventListener("change", renderCompareAll);
     $("compareRangeEnd").addEventListener("change", renderCompareAll);
     $("comparePreset").addEventListener("change", renderCompareAll);
-    $("compareAllMetric").addEventListener("change", renderCompareAll);
 
     // 图表与导出
     $("chartMetric").addEventListener("change", renderCharts);

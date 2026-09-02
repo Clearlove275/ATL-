@@ -338,6 +338,7 @@
               <span class="muted">→</span>
               <input id="deltaEnd" type="datetime-local" title="结束时间" />
               <select id="deltaPreset">
+                <option value="1d">前一天（默认）</option>
                 <option value="season">全赛季（最早→最新）</option>
                 <option value="7d">最近 7 天</option>
                 <option value="30d">最近 30 天</option>
@@ -386,15 +387,13 @@
               <div id="compareRange" class="compare-tools hidden">
                 <div class="compare-select">
                   <label>时间范围<select id="comparePreset"><option value="1d">前一天</option><option value="7d">近7天</option><option value="30d">近30天</option><option value="season">全赛季</option><option value="custom">自定义</option></select></label>
-                  <label>图表指标<select id="compareAllMetric"><option value="merit">Δ武勋</option><option value="power">Δ势力</option><option value="ct">Δ总贡献</option><option value="cw">Δ周贡献</option></select></label>
-                </div>
+                  </div>
                 <div id="compareCustomRange" class="compare-select hidden">
                   <label>起始时间<input id="compareRangeStart" type="datetime-local" /></label>
                   <span class="muted">→</span>
                   <label>结束时间<input id="compareRangeEnd" type="datetime-local" /></label>
                 </div>
-                <div class="chart-wrap" style="height:380px;"><canvas id="compareAllChart"></canvas></div>
-              </div>
+                </div>
             </div>
             <div id="compareResult" class="compare-result"></div>
           </section>
