@@ -1116,8 +1116,6 @@
       if (res.user) { enterApp(res.user); }
       else { $("authMsg").textContent = "注册成功，已自动登录。"; }
     });
-    $("qqLogin").onclick = () => toast("QQ 登录需要接入 QQ 互联（提供 AppID / AppKey）后才能使用");
-    $("wechatLogin").onclick = () => toast("微信登录需要接入微信开放平台（提供 AppID / AppSecret）后才能使用");
     $("authLocalDemo").onclick = async () => { const u = await Store.auth.getUser(); if (u) enterApp(u); };
 
     // 顶栏

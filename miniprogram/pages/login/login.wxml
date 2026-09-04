@@ -16,7 +16,6 @@
       <text class="muted">记住账号和密码</text>
     </view>
     <button class="btn" loading="{{loading}}" bindtap="submit">{{mode==='login'?'登录':'注册'}}</button>
-    <button class="btn-wechat" bindtap="wechatLogin">微信一键登录</button>
     <view class="muted" style="text-align:right;margin-top:16rpx;" bindtap="forgot">忘记密码？</view>
     <view class="muted" style="margin-top:16rpx;min-height:36rpx;">{{msg}}</view>
   </view>

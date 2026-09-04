@@ -388,8 +388,6 @@ td.num { font-variant-numeric: tabular-nums; }
 .auth-forgot span { color: var(--gold2); font-size: 13px; cursor: pointer; }
 .auth-forgot span:hover { text-decoration: underline; }
 
-.social-btns { display: flex; gap: 12px; }
-.social-btn { flex: 1; }
 
 .compare-table { width: 100%; }
 .compare-table th, .compare-table td { padding: 14px 18px; font-size: 15px; }
